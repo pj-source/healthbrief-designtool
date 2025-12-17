@@ -473,6 +473,60 @@
       background: #140c08;
     }
 
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #f2ece3;
+      transition: background-color 0.3s ease;
+      border-radius: 24px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #fff;
+      transition: transform 0.3s ease;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: #80796F;
+    }
+
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    .toggle-slider:hover {
+      background-color: #ebe3d8;
+    }
+
+    .toggle-switch input:checked + .toggle-slider:hover {
+      background-color: #726b62;
+    }
+
     small.hint {
       position: fixed;
       bottom: 0.75rem;
@@ -551,6 +605,14 @@
 
     <div class="panel-section-title">Shape &amp; Grid</div>
     <div class="field">
+      <label for="showGrid">Show Grid</label>
+      <label class="toggle-switch">
+        <input id="showGrid" type="checkbox" checked />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="field">
       <label for="seed">Shape Seed</label>
       <div class="field-inline">
         <button type="button" id="randomSeed" class="pill-button seed-button" title="Change seed">
@@ -563,11 +625,6 @@
       </div>
     </div>
     <input id="seed" type="hidden" value="001" />
-
-    <div class="field">
-      <label for="showGrid">Show Grid</label>
-      <input id="showGrid" type="checkbox" checked class="pill-input" style="width: 20px; height: 20px; cursor: pointer;" />
-    </div>
 
     <div class="field">
       <label for="cols">Columns</label>
