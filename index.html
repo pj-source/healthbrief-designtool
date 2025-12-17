@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Diagonal Grid Generator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      padding-left: 360px;
+      background: #F1EFEB;
+      color: #201711;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+        padding: 20px;
+        padding-top: 20px;
+        align-items: center;
+        gap: 20px;
+      }
+    }
+
+    .panel {
+      position: fixed;
+      top: 32px;
+      left: 32px;
+      bottom: 32px;
+      width: 300px;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 20px 24px;
+      border-radius: 8px;
+      background: #F9F7F4;
+      z-index: 10;
+      overflow-y: auto;
+    }
+
+    @media (max-width: 768px) {
+      .panel {
+        position: relative;
+        top: auto;
+        left: auto;
+        bottom: auto;
+        width: calc(100% - 40px);
+        max-width: 600px;
+        border-radius: 8px;
+        order: 2;
+        padding: 24px 20px;
+      }
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0px;
+    }
+
+    .panel-logo {
+      height: 20px;
+      width: auto;
+      margin-left: -4px;
+    }
+
+    .panel-logo svg {
+      height: 100%;
+      width: auto;
+      display: block;
+    }
+
+    .reset-btn {
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: none;
+      background: transparent;
+      color: #6b5b4b;
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .reset-btn:hover {
+      background: #f2ece3;
+      color: #3a2b1f;
+    }
+
+    .reset-btn:active {
+      background: #ebe3d8;
+    }
+
+    .panel-section-title {
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: #22160f;
+      margin: 40px 0 20px;
+      position: relative;
+    }
+
+    .panel-section-title:first-of-type {
+      margin-top: 0;
+    }
+
+    .panel-section-title::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -12px;
+      height: 1px;
+      background: #e1d9cc;
+    }
+
+    .field {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: #6b5b4b;
+      margin-top: 8px;
+    }
+
+    .field label {
+      font-size: 0.78rem;
+      font-weight: 400;
+      color: #3a2b1f;
+    }
+
+    .field-inline {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    .stepper {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #f2ece3;
+      border-radius: 4px;
+      padding: 2px 6px;
+      width: 90px;
+      justify-content: space-between;
+      height: 30px;
+    }
+
+    .stepper-input {
+      background: transparent;
+      border: none;
+      width: 52px;
+      text-align: center;
+      font-size: 0.78rem;
+      color: #201711;
+      padding: 2px 0;
+    }
+
+    .stepper-btn {
+      border: none;
+      background: transparent;
+      color: #3a2b1f;
+      font-size: 0.8rem;
+      padding: 0 2px;
+      cursor: pointer;
+    }
+
+    .pill-input {
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: none;
+      background: #f2ece3;
+      color: #201711;
+      font-size: 0.78rem;
+      min-width: 0;
+      height: 30px;
+      transition: background 0.2s ease;
+    }
+
+    .pill-input:hover {
+      background: #ebe3d8;
+    }
+
+    .pill-input:focus {
+      outline: none;
+      background: #e0d7cc;
+    }
+
+    input[type="text"].pill-input {
+      width: 80px;
+      text-align: center;
+    }
+
+    input[type="number"].pill-input {
+      width: 80px;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    .color-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-start;
+      margin-top: 4px;
+    }
+
+    .color-chip {
+      border: none;
+      background: #f2ece3;
+      color: #4f463d;
+      border-radius: 999px;
+      padding: 6px 10px 6px 8px;
+      font-size: 0.78rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .color-chip:hover {
+      background: #ebe3d8;
+    }
+
+    .color-chip:active {
+      background: #e0d7cc;
+    }
+
+    .color-chip.selected {
+      background: #80796F;
+      color: #fdf8f1;
+    }
+
+    .color-chip.selected:hover {
+      background: #726b62;
+    }
+
+    .color-chip.selected:active {
+      background: #645d56;
+    }
+
+    .color-chip.selected .color-dot {
+      border: 1px solid rgba(253, 248, 241, 0.2);
+    }
+
+    .color-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .field.color-field {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .field.slider-field {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .field.slider-field label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .slider-value {
+      font-size: 0.72rem;
+      color: #6b5b4b;
+      margin-left: 8px;
+    }
+
+    .slider-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+      justify-content: flex-start;
+      width: 100%;
+    }
+
+    .slider-shell {
+      position: relative;
+      width: 100%;
+      height: 26px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      padding: 0 2px;
+    }
+
+    input[type="range"].pill-range {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      outline: none;
+      margin: 0;
+    }
+
+    #coverage.pill-range {
+      background: linear-gradient(
+        to right,
+        #80796F 0%,
+        #80796F var(--coverage-fill, 50%),
+        #F2ECE3 var(--coverage-fill, 50%),
+        #F2ECE3 100%
+      );
+    }
+
+    #noise.pill-range {
+      background: linear-gradient(
+        to right,
+        #80796F 0%,
+        #80796F var(--noise-fill, 50%),
+        #F2ECE3 var(--noise-fill, 50%),
+        #F2ECE3 100%
+      );
+    }
+
+    input[type="range"].pill-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #80796F;
+      border: 1px solid #80796F;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    input[type="range"].pill-range::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    input[type="range"].pill-range::-webkit-slider-thumb:active {
+      background: #5d5650;
+      border-color: #5d5650;
+    }
+
+    input[type="range"].pill-range::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #80796F;
+      border: 1px solid #80796F;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    input[type="range"].pill-range::-moz-range-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    input[type="range"].pill-range::-moz-range-thumb:active {
+      background: #5d5650;
+      border-color: #5d5650;
+    }
+
+    .icon-button {
+      padding: 0;
+      border-radius: 6px;
+      border: none;
+      background: #f2ece3;
+      color: #3a2b1f;
+      cursor: pointer;
+      font-size: 1.125rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 30px;
+      width: 30px;
+      min-width: 30px;
+    }
+
+    .icon-button:hover {
+      background: #ebe3d8;
+    }
+
+    .file-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: flex-end;
+      flex: 1;
+    }
+
+    .file-label {
+      font-size: 0.75rem;
+      color: #8b7a67;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 120px;
+    }
+
+    .pill-button {
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: none;
+      background: #f2ece3;
+      color: #2a1a11;
+      font-size: 0.76rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 30px;
+      transition: background 0.2s ease;
+    }
+
+    .icon-button svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .pill-button svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .pill-button:hover {
+      background: #ebe3d8;
+    }
+
+    button.primary-block {
+      margin-top: auto;
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 4px;
+      border: none;
+      background: #20140d;
+      color: #fdf8f1;
+      font-size: 0.85rem;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      height: 44px;
+      transition: background 0.2s ease;
+    }
+
+    button.primary-block:hover {
+      background: #1a100b;
+    }
+
+    button.primary-block:active {
+      background: #140c08;
+    }
+
+    small.hint {
+      position: fixed;
+      bottom: 0.75rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(103, 90, 75, 0.65);
+      opacity: 0.85;
+      pointer-events: none;
+    }
+
+    canvas {
+      display: block;
+      border-radius: 0;
+      background: #111;
+      object-fit: contain;
+    }
+
+    @media (max-width: 768px) {
+      canvas {
+        order: 1;
+        width: calc(100% - 40px) !important;
+        max-width: 600px;
+        height: auto !important;
+        max-height: 50vh;
+        margin: 0 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1014 200">
+          <defs>
+            <style>
+              .cls-1 {
+                fill-rule: evenodd;
+              }
+              .cls-1, .cls-2 {
+                fill: #231b0f;
+              }
+            </style>
+          </defs>
+          <path class="cls-2" d="M911.56,80.99v-7.47h16.18v-15.56c0-22.34,9.51-34.4,28.47-34.4,12.82,0,25.45,12.12,25.45,25.65,0,4.1-2.71,9.47-8.25,9.47-4.79,0-8.49-3.99-8.49-9.47,0-2.8.51-4.17.51-7.29,0-7.18-5.23-11.85-11.4-11.85-6.66,0-12.02,4.85-12.02,12.7,0,15.85,1.49,19.13,1.49,28.77v.88h25.64v8.59h-24.8v77.56c0,7.99,4.7,12.27,18.04,13.03v5.25h-49.15v-5.25c11.56-1.47,14.71-4.83,14.71-13.03v-77.56h-16.39Z"/>
+          <path class="cls-2" d="M871.22,178.52c-26.27,0-43.51-21.02-43.51-51.49,0-35.1,19.97-56.54,44.77-56.54,23.12,0,36.15,18.71,35.1,44.14h-63.06c-.21,1.89-.21,3.78-.21,5.67,0,27.95,12.4,45.61,32.37,45.61,13.87,0,23.33-9.46,27.53-25.01h5.25c-4.41,24.38-17.86,37.62-38.25,37.62ZM845.16,108.11h37.83c4.41,0,6.73-2.73,6.73-8.2,0-13.24-7.15-22.91-18.5-22.91-13.03,0-23.12,12.19-26.06,31.11Z"/>
+          <path class="cls-2" d="M781.52,176.84v-5.25c10.93-1.47,14.5-4.83,14.5-13.45v-66c0-5.89-2.31-8.62-7.99-8.62h-6.31v-5.25l25.43-6.73h5.26v86.59c0,8.41,3.78,11.98,14.29,13.45v5.25h-45.19Z"/>
+          <path class="cls-2" d="M740.25,92.56c4.41-14.29,13.87-22.07,23.12-22.07,7.99,0,13.45,5.25,13.45,11.56,0,4.83-3.57,8.62-8.41,8.62-3.15,0-5.46-1.68-6.73-3.78-1.26-2.1-2.73-4.2-5.68-4.2-8.41,0-15.55,15.55-15.55,30.27v45.4c0,9.25,5.25,11.77,16.81,13.24v5.25h-46.66v-5.25c9.88-1.26,13.24-5.04,13.24-13.24v-66.21c0-5.67-2.1-8.62-7.78-8.62h-6.31v-5.25l25.43-6.73h5.05v21.02Z"/>
+          <path class="cls-2" d="M585.28,176.83v-5.25c14.92-1.47,18.92-7.36,18.92-17.23V47.78c0-9.88-3.99-15.76-18.92-17.23v-5.25h62.43c31.95,0,48.76,13.87,48.76,36.99,0,19.13-12.4,32.16-32.79,34.68,25.01,2.73,40.35,17.44,40.35,39.51,0,24.8-16.18,40.35-51.7,40.35h-67.05ZM622.48,169.48l28.38-.63c22.91-.84,33.84-14.29,33.84-32.79,0-19.76-14.31-33.63-35.11-33.63l-27.11-.18v67.23ZM622.48,94.35l22.56-.12c19.55,0,32.51-12.61,32.51-30.69,0-17.02-10.93-29.22-31.11-30.27l-23.96-.63v61.71Z"/>
+          <path class="cls-2" d="M445.79,176.84v-5.25c11.35-1.47,14.5-4.83,14.5-13.03V44.21c0-5.89-2.31-8.62-7.99-8.62h-6.1v-5.46l25.22-6.52h5.46v69.78c5.46-14.71,17.45-22.91,31.11-22.91,17.24,0,28.58,13.03,28.58,34.68v53.39c0,7.78,3.15,11.56,14.5,13.03v5.25h-44.98v-5.25c10.72-1.47,14.08-4.83,14.08-13.03v-52.55c0-14.71-6.73-23.12-19.97-23.12-10.51,0-23.33,10.72-23.33,28.16v47.5c0,8.2,3.36,11.56,13.87,13.03v5.25h-44.98Z"/>
+          <path class="cls-2" d="M440.18,155.19h5.25c-1.26,12.82-9.88,23.33-22.49,23.33-13.66,0-22.91-8.62-22.91-26.69v-70.83h-15.13v-5.04c13.24-2.1,23.75-11.77,26.9-25.64h5.26v21.86h24.59v8.83h-24.8v69.78c0,10.72,3.99,16.81,11.14,16.81,6.1,0,10.72-5.25,12.19-12.4Z"/>
+          <path class="cls-1" d="M374.33,158.13c0,8.41,3.78,11.98,14.08,13.45v5.26h-52.63c-9.67,0-17.47-6.39-17.47-15.77v-3.57c-5.05,14.29-15.35,21.02-27.33,21.02-14.08,0-26.69-9.46-26.69-26.91,0-15.13,7.99-24.38,30.9-32.99l15.34-5.68c5.88-2.31,7.78-6.72,7.78-12.82v-.21c0-14.92-7.15-23.12-18.7-23.12-11.56,0-17.66,7.36-17.66,14.92,0,3.57,1.26,5.25,1.26,8.62,0,5.04-4,8.41-8.83,8.41-5.04,0-8.62-3.78-8.62-9.45,0-15.76,14.92-28.8,35.73-28.8,20.39,0,33.42,11.56,33.42,32.58v53.94c0,9.96,4.18,14.55,10.69,14.55s12.11-3.63,12.11-14.99V44.42c0-6.09-2.31-8.83-8.19-8.83h-6.1v-5.46l25.65-6.52h5.25v134.51ZM301.51,123.66c-11.56,4.83-19.97,11.77-19.97,24.8,0,12.61,7.57,18.92,15.77,18.92,10.51,0,21.02-11.14,21.02-26.69v-23.75l-16.81,6.73Z"/>
+          <path class="cls-2" d="M215.92,178.52c-26.27,0-43.51-21.02-43.51-51.49,0-35.1,19.97-56.54,44.77-56.54,23.12,0,36.15,18.71,35.1,44.14h-63.05c-.21,1.89-.21,3.78-.21,5.67,0,27.95,12.4,45.61,32.37,45.61,13.87,0,23.33-9.46,27.53-25.01h5.25c-4.41,24.38-17.87,37.62-38.25,37.62ZM189.85,108.11h37.83c4.41,0,6.73-2.73,6.73-8.2,0-13.24-7.15-22.91-18.5-22.91-13.03,0-23.12,12.19-26.06,31.11Z"/>
+          <path class="cls-2" d="M69.34,154.76c0,10.51,5.04,15.34,18.71,16.81v5.25h-55.7v-5.25c14.08-1.47,18.71-6.52,18.71-16.81V47.36c0-10.3-4.62-15.34-18.71-16.81v-5.25h55.7v5.25c-14.29,1.47-18.71,6.73-18.71,16.81v48.76h64.74v-48.76c0-10.3-4.41-15.34-18.71-16.81v-5.25h55.91v5.25c-14.29,1.47-18.71,6.73-18.71,16.81v107.4c0,10.51,5.04,15.34,18.71,16.81v5.25h-55.91v-5.25c14.29-1.47,18.71-6.52,18.71-16.81v-50.23h-64.74v50.23Z"/>
+          <path class="cls-2" d="M796.04,39.73c0-5.49,3.16-10.48,8.13-12.83l11.46-5.42v16.19c0,5.49-3.16,10.48-8.13,12.83l-11.46,5.42v-16.19Z"/>
+        </svg>
+      </div>
+      <button type="button" id="resetBtn" class="reset-btn">Reset</button>
+    </div>
+
+    <div class="panel-section-title">Background</div>
+    <div class="field">
+      <label>Image</label>
+      <div class="file-controls">
+        <span id="bgFileLabel" class="file-label">No file chosen</span>
+        <button type="button" id="bgUploadBtn" class="pill-button">
+          Upload <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+      </div>
+    </div>
+    <input id="bgImage" type="file" accept="image/*" style="display:none" />
+
+    <div class="panel-section-title">Shape &amp; Grid</div>
+    <div class="field">
+      <label for="seed">Shape Seed</label>
+      <div class="field-inline">
+        <button type="button" id="randomSeed" class="pill-button seed-button" title="Change seed">
+          New
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        </button>
+        <button type="button" id="undoSeed" class="icon-button" title="Undo seed change" disabled>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"></path></svg>
+        </button>
+      </div>
+    </div>
+    <input id="seed" type="hidden" value="001" />
+
+    <div class="field">
+      <label for="cols">Columns</label>
+      <div class="stepper" data-target="cols">
+        <button type="button" class="stepper-btn" data-dir="-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+        <input id="cols" type="number" min="3" max="16" value="10" class="pill-input stepper-input" />
+        <button type="button" class="stepper-btn" data-dir="1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="rows">Rows</label>
+      <div class="stepper" data-target="rows">
+        <button type="button" class="stepper-btn" data-dir="-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+        <input id="rows" type="number" min="3" max="12" value="7" class="pill-input stepper-input" />
+        <button type="button" class="stepper-btn" data-dir="1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+      </div>
+    </div>
+
+    <div class="panel-section-title">Lines</div>
+    <div class="field">
+      <label for="strokeMin">Min Width</label>
+      <div class="stepper" data-target="strokeMin">
+        <button type="button" class="stepper-btn" data-dir="-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+        <input id="strokeMin" type="number" step="0.1" value="0.5" class="pill-input stepper-input" />
+        <button type="button" class="stepper-btn" data-dir="1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="strokeMax">Max Width</label>
+      <div class="stepper" data-target="strokeMax">
+        <button type="button" class="stepper-btn" data-dir="-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+        <input id="strokeMax" type="number" step="0.1" value="3.5" class="pill-input stepper-input" />
+        <button type="button" class="stepper-btn" data-dir="1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+      </div>
+    </div>
+
+    <div class="field color-field">
+      <label>Color</label>
+      <div class="color-chips" id="colorChips">
+        <button type="button" class="color-chip selected" data-color="clay">
+          <span class="color-dot" style="background:#BA4E2F;"></span>
+          Clay
+        </button>
+        <button type="button" class="color-chip" data-color="blue">
+          <span class="color-dot" style="background:#26476E;"></span>
+          Blue
+        </button>
+        <button type="button" class="color-chip" data-color="merlot">
+          <span class="color-dot" style="background:#631B21;"></span>
+          Merlot
+        </button>
+        <button type="button" class="color-chip" data-color="rose">
+          <span class="color-dot" style="background:#EBCFDB;"></span>
+          Rose
+        </button>
+        <button type="button" class="color-chip" data-color="mist">
+          <span class="color-dot" style="background:#D0E0EC;"></span>
+          Mist
+        </button>
+        <button type="button" class="color-chip" data-color="teal">
+          <span class="color-dot" style="background:#16443F;"></span>
+          Teal
+        </button>
+        <button type="button" class="color-chip" data-color="mint">
+          <span class="color-dot" style="background:#E0F4F1;"></span>
+          Mint
+        </button>
+        <button type="button" class="color-chip" data-color="peach">
+          <span class="color-dot" style="background:#F7D8B2;"></span>
+          Peach
+        </button>
+      </div>
+      <input id="lineColorPreset" type="hidden" value="clay" />
+    </div>
+
+    <div class="panel-section-title">Field</div>
+    <div class="field slider-field">
+      <label>Coverage <span id="coverageValue" class="slider-value">0.30</span></label>
+      <div class="slider-wrapper">
+        <div class="slider-shell">
+          <input id="coverage" type="range" step="0.01" min="0.1" max="0.4" value="0.30" class="pill-range" />
+        </div>
+      </div>
+    </div>
+
+    <div class="field slider-field">
+      <label>Noise <span id="noiseValue" class="slider-value">0.20</span></label>
+      <div class="slider-wrapper">
+        <div class="slider-shell">
+          <input id="noise" type="range" step="0.01" min="0" max="1.0" value="0.20" class="pill-range" />
+        </div>
+      </div>
+    </div>
+
+    <button id="render" class="primary-block">Export</button>
+  </div>
+
+  <script>
+    function xmur3(str) {
+      let h = 1779033703 ^ str.length;
+      for (let i = 0; i < str.length; i++) {
+        h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+        h = (h << 13) | (h >>> 19);
+      }
+      return function () {
+        h = Math.imul(h ^ (h >>> 16), 2246822507);
+        h = Math.imul(h ^ (h >>> 13), 3266489909);
+        return (h ^= h >>> 16) >>> 0;
+      };
+    }
+
+    function mulberry32(a) {
+      return function () {
+        let t = (a += 0x6d2b79f5);
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function createRNG(seedStr) {
+      const seedFn = xmur3(seedStr);
+      return mulberry32(seedFn());
+    }
+
+    const LINE_PALETTE = {
+      merlot: { r: 99, g: 27, b: 33 },
+      rose:   { r: 235, g: 207, b: 218 },
+      blue:   { r: 38, g: 71, b: 110 },
+      mist:   { r: 208, g: 224, b: 236 },
+      teal:   { r: 22, g: 68, b: 63 },
+      mint:   { r: 224, g: 244, b: 241 },
+      clay:   { r: 186, g: 78,  b: 47 },
+      peach:  { r: 247, g: 216, b: 178 },
+    };
+
+    const BASE_WIDTH = 1072;
+    const SCALE_FACTOR = 3; // Render at 3x resolution for crisp output
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    let bgImage = null;
+
+    function updateCanvasSize(cols, rows) {
+      const baseW = BASE_WIDTH * SCALE_FACTOR;
+      const baseH = Math.round(baseW * (rows / cols));
+      canvas.width = baseW;
+      canvas.height = baseH;
+      // Scale CSS display size to keep UI manageable and maintain aspect ratio
+      const displayWidth = Math.min(BASE_WIDTH, window.innerWidth - 400);
+      const displayHeight = Math.round(displayWidth * (rows / cols));
+      canvas.style.width = `${displayWidth}px`;
+      canvas.style.height = `${displayHeight}px`;
+      canvas.style.maxWidth = 'calc(100vw - 380px)';
+      canvas.style.maxHeight = '90vh';
+      canvas.style.objectFit = 'contain';
+    }
+
+    function drawPattern(seed, cols, rows, config) {
+      const rand = createRNG(seed);
+
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      if (bgImage) {
+        const scale = Math.max(w / bgImage.width, h / bgImage.height);
+        const dw = bgImage.width * scale;
+        const dh = bgImage.height * scale;
+        const dx = (w - dw) / 2;
+        const dy = (h - dh) / 2;
+        ctx.drawImage(bgImage, dx, dy, dw, dh);
+      } else {
+        ctx.fillStyle = "#020304";
+        ctx.fillRect(0, 0, w, h);
+      }
+
+      const cellW = w / cols;
+      const cellH = h / rows;
+      const cellSize = Math.min(cellW, cellH);
+
+      const angle = config.angle;
+      const spacingFactor = config.spacingFactor;
+      const strokeMin = config.strokeMin;
+      const strokeMax = config.strokeMax;
+      const coverage = Math.min(1, Math.max(0, config.coverage));
+      const noise = Math.min(1, Math.max(0, config.noise || 0));
+      const strokeColor = config.strokeColor;
+
+      const weights = [];
+      const blobCount = 3 + Math.floor(rand() * 3);
+      const blobs = [];
+      const scale = Math.max(cols, rows);
+
+      for (let i = 0; i < blobCount; i++) {
+        const edgeBias = 0.8;
+        let cx, cy;
+
+        if (rand() < edgeBias) {
+          const side = Math.floor(rand() * 4);
+          if (side === 0) {
+            cx = rand() * cols;
+            cy = rand() * (rows * 0.25);
+          } else if (side === 1) {
+            cx = rand() * cols;
+            cy = rows * (0.75 + rand() * 0.25);
+          } else if (side === 2) {
+            cx = rand() * (cols * 0.25);
+            cy = rand() * rows;
+          } else {
+            cx = cols * (0.75 + rand() * 0.25);
+            cy = rand() * rows;
+          }
+        } else {
+          cx = rand() * cols;
+          cy = rand() * rows;
+
+          const centerX = cols / 2;
+          const centerY = rows / 2;
+          const centerMarginX = cols * 0.2;
+          const centerMarginY = rows * 0.2;
+
+          if (Math.abs(cx - centerX) < centerMarginX && Math.abs(cy - centerY) < centerMarginY) {
+            if (cx < centerX) cx -= centerMarginX * 0.5;
+            else cx += centerMarginX * 0.5;
+            if (cy < centerY) cy -= centerMarginY * 0.5;
+            else cy += centerMarginY * 0.5;
+          }
+        }
+
+        const radius = scale * (0.6 + rand() * 0.9);
+        blobs.push({ cx, cy, radius });
+      }
+
+      for (let yy = 0; yy < rows; yy++) {
+        for (let xx = 0; xx < cols; xx++) {
+          let v = 0;
+          for (const b of blobs) {
+            const dx = xx - b.cx;
+            const dy = yy - b.cy;
+            const d2 = dx * dx + dy * dy;
+            const r2 = b.radius * b.radius;
+            v += Math.exp(-d2 / (2 * r2));
+          }
+          if (noise > 0) {
+            v += (rand() - 0.5) * 2 * noise;
+          }
+          weights.push({ x: xx, y: yy, v });
+        }
+      }
+
+      weights.sort((a, b) => b.v - a.v);
+      const cutoffIndex = Math.floor(coverage * weights.length);
+      const activeCells = weights.slice(0, cutoffIndex);
+
+      let minV = Infinity;
+      let maxV = -Infinity;
+      for (const cell of activeCells) {
+        if (cell.v < minV) minV = cell.v;
+        if (cell.v > maxV) maxV = cell.v;
+      }
+      if (!isFinite(minV)) {
+        minV = 0;
+        maxV = 1;
+      } else if (maxV === minV) {
+        maxV = minV + 1;
+      }
+
+      function drawStripedCell(cell) {
+        const cx = cell.x;
+        const cy = cell.y;
+        const x = cx * cellW;
+        const y = cy * cellH;
+
+        const gap = cellSize * spacingFactor;
+
+        let t = (cell.v - minV) / (maxV - minV);
+        if (!isFinite(t)) t = 0.5;
+        t = Math.min(1, Math.max(0, t));
+
+        const stripeWidth = strokeMin + t * (strokeMax - strokeMin);
+
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = stripeWidth;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x, y, cellW, cellH);
+        ctx.clip();
+
+        ctx.translate(x + cellW / 2, y + cellH / 2);
+        ctx.rotate(angle);
+
+        const span = Math.max(cellW, cellH) * 3;
+        for (let i = -span; i <= span; i += gap) {
+          ctx.beginPath();
+          ctx.moveTo(i, -span);
+          ctx.lineTo(i, span);
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+
+      activeCells.forEach(drawStripedCell);
+
+      ctx.globalCompositeOperation = 'exclusion';
+      ctx.strokeStyle = "rgba(215, 212, 207, 0.15)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= cols; i++) {
+        const x = i * cellW + 0.5;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+      }
+      for (let j = 0; j <= rows; j++) {
+        const y = j * cellH + 0.5;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    const seedInput = document.getElementById("seed");
+    const colsInput = document.getElementById("cols");
+    const rowsInput = document.getElementById("rows");
+    const strokeMinInput = document.getElementById("strokeMin");
+    const strokeMaxInput = document.getElementById("strokeMax");
+    const coverageInput = document.getElementById("coverage");
+    const noiseInput = document.getElementById("noise");
+    const coverageValueLabel = document.getElementById("coverageValue");
+    const noiseValueLabel = document.getElementById("noiseValue");
+    const lineColorPresetInput = document.getElementById("lineColorPreset");
+    const colorChips = document.getElementById("colorChips");
+    const bgInput = document.getElementById("bgImage");
+    const bgUploadBtn = document.getElementById("bgUploadBtn");
+    const bgFileLabel = document.getElementById("bgFileLabel");
+    const renderBtn = document.getElementById("render");
+    const randomSeedBtn = document.getElementById("randomSeed");
+    const undoSeedBtn = document.getElementById("undoSeed");
+    const resetBtn = document.getElementById("resetBtn");
+
+    // Seed history for undo functionality
+    let seedHistory = ['001'];
+    let seedHistoryIndex = 0;
+
+    // Default values for reset
+    const defaults = {
+      seed: '001',
+      cols: 10,
+      rows: 7,
+      strokeMin: 0.5,
+      strokeMax: 3.5,
+      coverage: 0.30,
+      noise: 0.20,
+      color: 'clay',
+      bgImage: null
+    };
+
+    function getStrokeColor() {
+      const preset = lineColorPresetInput.value;
+      let rgb = LINE_PALETTE[preset] || LINE_PALETTE.clay;
+      const alpha = 0.8;
+      return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+    }
+
+    function getConfig() {
+      let strokeMin = parseFloat(strokeMinInput.value);
+      if (isNaN(strokeMin) || strokeMin <= 0) strokeMin = 1;
+
+      let strokeMax = parseFloat(strokeMaxInput.value);
+      if (isNaN(strokeMax) || strokeMax < strokeMin) strokeMax = Math.max(strokeMin, 3);
+
+      let coverage = parseFloat(coverageInput.value);
+      if (isNaN(coverage)) coverage = 0.35;
+      coverage = Math.min(0.4, Math.max(0.1, coverage));
+
+      const noise = parseFloat(noiseInput.value) || 0;
+
+      const angleDeg = -127;
+
+      return {
+        angle: (angleDeg * Math.PI) / 180,
+        spacingFactor: 0.1,
+        strokeMin,
+        strokeMax,
+        coverage,
+        noise,
+        strokeColor: getStrokeColor(),
+      };
+    }
+
+    function regenerate() {
+      const seed = seedInput.value.trim() || "default";
+      const cols = Math.max(3, Math.min(16, parseInt(colsInput.value || "8", 10)));
+      const rows = Math.max(3, Math.min(12, parseInt(rowsInput.value || "5", 10)));
+      colsInput.value = cols;
+      rowsInput.value = rows;
+
+      const config = getConfig();
+
+      updateCanvasSize(cols, rows);
+      drawPattern(seed, cols, rows, config);
+    }
+
+    renderBtn.addEventListener("click", regenerate);
+    renderBtn.addEventListener("click", () => {
+      // Trigger download
+      const link = document.createElement('a');
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:]/g, '-');
+      const seed = seedInput.value.trim() || 'default';
+      link.download = `diagonal-grid-${seed}-${timestamp}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+    
+    seedInput.addEventListener("change", regenerate);
+    colsInput.addEventListener("change", regenerate);
+    rowsInput.addEventListener("change", regenerate);
+    strokeMinInput.addEventListener("change", regenerate);
+    strokeMaxInput.addEventListener("change", regenerate);
+
+    coverageInput.addEventListener("input", () => {
+      const min = parseFloat(coverageInput.min) || 0;
+      const max = parseFloat(coverageInput.max) || 1;
+      let v = parseFloat(coverageInput.value);
+      if (isNaN(v)) v = min;
+      const pct = ((v - min) / (max - min)) * 100;
+      document.documentElement.style.setProperty('--coverage-fill', pct + '%');
+      if (coverageValueLabel) coverageValueLabel.textContent = v.toFixed(2);
+      regenerate();
+    });
+
+    noiseInput.addEventListener("input", () => {
+      const min = parseFloat(noiseInput.min) || 0;
+      const max = parseFloat(noiseInput.max) || 1;
+      let v = parseFloat(noiseInput.value);
+      if (isNaN(v)) v = min;
+      const pct = ((v - min) / (max - min)) * 100;
+      document.documentElement.style.setProperty('--noise-fill', pct + '%');
+      if (noiseValueLabel) noiseValueLabel.textContent = v.toFixed(2);
+      regenerate();
+    });
+
+    colorChips.addEventListener("click", (event) => {
+      const chip = event.target.closest(".color-chip");
+      if (!chip) return;
+      const value = chip.getAttribute("data-color");
+      if (!value) return;
+
+      lineColorPresetInput.value = value;
+
+      document.querySelectorAll(".color-chip").forEach((el) => {
+        el.classList.toggle("selected", el === chip);
+      });
+
+      regenerate();
+    });
+
+    bgUploadBtn.addEventListener("click", () => {
+      bgInput.click();
+    });
+
+    bgInput.addEventListener("change", (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) {
+        bgImage = null;
+        bgFileLabel.textContent = "No file chosen";
+        regenerate();
+        return;
+      }
+      bgFileLabel.textContent = file.name;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          bgImage = img;
+          regenerate();
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    randomSeedBtn.addEventListener("click", () => {
+      const s = `seed-${Math.floor(Math.random() * 1e9).toString(16)}`;
+      seedInput.value = s;
+      
+      // Add to history and update index
+      seedHistoryIndex++;
+      seedHistory = seedHistory.slice(0, seedHistoryIndex);
+      seedHistory.push(s);
+      
+      // Enable undo button
+      undoSeedBtn.disabled = false;
+      
+      regenerate();
+    });
+
+    undoSeedBtn.addEventListener("click", () => {
+      if (seedHistoryIndex > 0) {
+        seedHistoryIndex--;
+        seedInput.value = seedHistory[seedHistoryIndex];
+        
+        // Disable undo if at the start
+        if (seedHistoryIndex === 0) {
+          undoSeedBtn.disabled = true;
+        }
+        
+        regenerate();
+      }
+    });
+
+    resetBtn.addEventListener("click", () => {
+      // Reset all values to defaults
+      seedInput.value = defaults.seed;
+      colsInput.value = defaults.cols;
+      rowsInput.value = defaults.rows;
+      strokeMinInput.value = defaults.strokeMin;
+      strokeMaxInput.value = defaults.strokeMax;
+      coverageInput.value = defaults.coverage;
+      noiseInput.value = defaults.noise;
+      lineColorPresetInput.value = defaults.color;
+      
+      // Reset color chip selection
+      document.querySelectorAll(".color-chip").forEach((chip) => {
+        chip.classList.toggle("selected", chip.getAttribute("data-color") === defaults.color);
+      });
+      
+      // Reset background image
+      bgImage = null;
+      bgFileLabel.textContent = "No file chosen";
+      bgInput.value = "";
+      
+      // Reset seed history
+      seedHistory = [defaults.seed];
+      seedHistoryIndex = 0;
+      undoSeedBtn.disabled = true;
+      
+      // Update slider fills
+      const coveragePct = ((defaults.coverage - 0.1) / (0.4 - 0.1)) * 100;
+      document.documentElement.style.setProperty('--coverage-fill', coveragePct + '%');
+      coverageValueLabel.textContent = defaults.coverage.toFixed(2);
+      
+      const noisePct = ((defaults.noise - 0) / (1.0 - 0)) * 100;
+      document.documentElement.style.setProperty('--noise-fill', noisePct + '%');
+      noiseValueLabel.textContent = defaults.noise.toFixed(2);
+      
+      regenerate();
+    });
+
+    document.querySelectorAll(".stepper-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const dir = parseFloat(btn.dataset.dir || "0") || 0;
+        const stepper = btn.closest(".stepper");
+        if (!stepper) return;
+        const targetId = stepper.getAttribute("data-target");
+        if (!targetId) return;
+        const input = document.getElementById(targetId);
+        if (!input) return;
+        const step = parseFloat(input.step || "1") || 1;
+        let val = parseFloat(input.value || "0");
+        if (Number.isNaN(val)) val = 0;
+        val += dir * step;
+        const min = input.min !== "" ? parseFloat(input.min) : -Infinity;
+        const max = input.max !== "" ? parseFloat(input.max) : Infinity;
+        if (val < min) val = min;
+        if (val > max) val = max;
+        // Round to 1 decimal place for decimal inputs
+        if (step < 1) {
+          val = Math.round(val * 10) / 10;
+        }
+        input.value = val;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+    });
+
+    (function initSliderFills() {
+      if (coverageInput) {
+        const min = parseFloat(coverageInput.min) || 0;
+        const max = parseFloat(coverageInput.max) || 1;
+        let v = parseFloat(coverageInput.value);
+        if (isNaN(v)) v = min;
+        const pct = ((v - min) / (max - min)) * 100;
+        document.documentElement.style.setProperty('--coverage-fill', pct + '%');
+        if (coverageValueLabel) coverageValueLabel.textContent = v.toFixed(2);
+      }
+      if (noiseInput) {
+        const min = parseFloat(noiseInput.min) || 0;
+        const max = parseFloat(noiseInput.max) || 1;
+        let nv = parseFloat(noiseInput.value);
+        if (isNaN(nv)) nv = min;
+        const pct = ((nv - min) / (max - min)) * 100;
+        document.documentElement.style.setProperty('--noise-fill', pct + '%');
+        if (noiseValueLabel) noiseValueLabel.textContent = nv.toFixed(2);
+      }
+    })();
+
+    regenerate();
+  </script>
+</body>
+</html>
