@@ -64,7 +64,47 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 0px;
+      margin-bottom: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      background: #ebe3d8;
+      border-radius: 4px;
+      padding: 3px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 6px 12px;
+      border: none;
+      background: transparent;
+      color: #6b5b4b;
+      font-size: 0.78rem;
+      font-weight: 400;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: all 0.2s ease;
+    }
+
+    .tab:hover {
+      color: #3a2b1f;
+    }
+
+    .tab.active {
+      background: #F9F7F4;
+      color: #201711;
+      font-weight: 500;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
     }
 
     .panel-logo {
@@ -591,6 +631,12 @@
       <button type="button" id="resetBtn" class="reset-btn">Reset</button>
     </div>
 
+    <div class="tabs">
+      <button class="tab active" data-tab="image">Image</button>
+      <button class="tab" data-tab="graphics">Graphics</button>
+    </div>
+
+    <div id="imageTab" class="tab-content active">
     <div class="panel-section-title">Background</div>
     <div class="field">
       <label>Image</label>
@@ -602,7 +648,9 @@
       </div>
     </div>
     <input id="bgImage" type="file" accept="image/*" style="display:none" />
+    </div>
 
+    <div id="graphicsTab" class="tab-content">
     <div class="panel-section-title">Shape &amp; Grid</div>
     <div class="field">
       <label for="showGrid">Show Grid</label>
@@ -719,6 +767,7 @@
           <input id="noise" type="range" step="0.01" min="0" max="1.0" value="0.20" class="pill-range" />
         </div>
       </div>
+    </div>
     </div>
 
     <button id="render" class="primary-block">Export</button>
@@ -1235,6 +1284,25 @@
         if (noiseValueLabel) noiseValueLabel.textContent = nv.toFixed(2);
       }
     })();
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const targetTab = tab.getAttribute('data-tab');
+
+        // Remove active class from all tabs and content
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+        // Add active class to clicked tab and corresponding content
+        tab.classList.add('active');
+        if (targetTab === 'image') {
+          document.getElementById('imageTab').classList.add('active');
+        } else if (targetTab === 'graphics') {
+          document.getElementById('graphicsTab').classList.add('active');
+        }
+      });
+    });
 
     regenerate();
   </script>
