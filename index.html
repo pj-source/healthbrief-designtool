@@ -686,6 +686,14 @@
         </div>
       </div>
     </div>
+
+    <div class="field">
+      <label for="blurTapered">Tapered Blur</label>
+      <label class="toggle-switch">
+        <input id="blurTapered" type="checkbox" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
     </div>
 
     <div id="graphicsTab" class="tab-content">
@@ -887,6 +895,7 @@
         uniform sampler2D u_image;
         uniform vec2 u_blurDirection;
         uniform float u_blurStrength;
+        uniform bool u_tapered;
         varying vec2 v_texCoord;
 
         void main() {
@@ -899,8 +908,16 @@
           for (int i = 0; i < samples; i++) {
             float offset = (float(i) - float(samples) / 2.0) / float(samples);
             vec2 sampleCoord = v_texCoord + u_blurDirection * offset * u_blurStrength;
-            color += texture2D(u_image, sampleCoord);
-            total += 1.0;
+
+            float weight = 1.0;
+            if (u_tapered) {
+              // Gaussian-like taper for smoother blur
+              float sigma = 0.5;
+              weight = exp(-(offset * offset) / (2.0 * sigma * sigma));
+            }
+
+            color += texture2D(u_image, sampleCoord) * weight;
+            total += weight;
           }
 
           gl_FragColor = color / total;
@@ -931,7 +948,7 @@
     }
 
     // Apply motion blur using WebGL
-    function applyMotionBlur(image, width, height, blurStrength, blurAngle) {
+    function applyMotionBlur(image, width, height, blurStrength, blurAngle, tapered) {
       if (!gl || !blurProgram || blurStrength === 0) {
         return image;
       }
@@ -990,6 +1007,9 @@
       const blurStrengthLocation = gl.getUniformLocation(blurProgram, 'u_blurStrength');
       gl.uniform1f(blurStrengthLocation, blurStrength);
 
+      const taperedLocation = gl.getUniformLocation(blurProgram, 'u_tapered');
+      gl.uniform1i(taperedLocation, tapered ? 1 : 0);
+
       // Draw
       gl.drawArrays(gl.TRIANGLES, 0, 6);
 
@@ -1033,10 +1053,11 @@
 
         const blurStrength = parseFloat(document.getElementById('blurStrength').value) || 0;
         const blurAngle = parseFloat(document.getElementById('blurAngle').value) || -127;
+        const blurTapered = document.getElementById('blurTapered').checked;
 
         if (blurStrength > 0 && gl) {
           // Apply WebGL motion blur
-          const blurredImage = applyMotionBlur(bgImage, Math.floor(dw), Math.floor(dh), blurStrength, blurAngle);
+          const blurredImage = applyMotionBlur(bgImage, Math.floor(dw), Math.floor(dh), blurStrength, blurAngle, blurTapered);
           ctx.drawImage(blurredImage, dx, dy, dw, dh);
         } else {
           ctx.drawImage(bgImage, dx, dy, dw, dh);
@@ -1207,6 +1228,7 @@
     const noiseInput = document.getElementById("noise");
     const blurStrengthInput = document.getElementById("blurStrength");
     const blurAngleInput = document.getElementById("blurAngle");
+    const blurTaperedCheckbox = document.getElementById("blurTapered");
     const coverageValueLabel = document.getElementById("coverageValue");
     const noiseValueLabel = document.getElementById("noiseValue");
     const blurStrengthValueLabel = document.getElementById("blurStrengthValue");
@@ -1239,7 +1261,8 @@
       bgImage: null,
       showGrid: true,
       blurStrength: 0,
-      blurAngle: -127
+      blurAngle: -127,
+      blurTapered: false
     };
 
     function getStrokeColor() {
@@ -1305,6 +1328,7 @@
     strokeMinInput.addEventListener("change", regenerate);
     strokeMaxInput.addEventListener("change", regenerate);
     showGridCheckbox.addEventListener("change", regenerate);
+    blurTaperedCheckbox.addEventListener("change", regenerate);
 
     coverageInput.addEventListener("input", () => {
       const min = parseFloat(coverageInput.min) || 0;
@@ -1430,6 +1454,7 @@
       noiseInput.value = defaults.noise;
       blurStrengthInput.value = defaults.blurStrength;
       blurAngleInput.value = defaults.blurAngle;
+      blurTaperedCheckbox.checked = defaults.blurTapered;
       lineColorPresetInput.value = defaults.color;
       showGridCheckbox.checked = defaults.showGrid;
 
