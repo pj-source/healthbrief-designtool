@@ -1481,7 +1481,7 @@
       document.documentElement.style.setProperty('--noise-fill', noisePct + '%');
       noiseValueLabel.textContent = defaults.noise.toFixed(2);
 
-      const blurStrengthPct = ((defaults.blurStrength - 0) / (2.0 - 0)) * 100;
+      const blurStrengthPct = ((defaults.blurStrength - 0) / (0.05 - 0)) * 100;
       document.documentElement.style.setProperty('--blur-strength-fill', blurStrengthPct + '%');
       blurStrengthValueLabel.textContent = defaults.blurStrength.toFixed(2);
 
@@ -1539,7 +1539,7 @@
       }
       if (blurStrengthInput) {
         const min = parseFloat(blurStrengthInput.min) || 0;
-        const max = parseFloat(blurStrengthInput.max) || 2.0;
+        const max = parseFloat(blurStrengthInput.max) || 0.05;
         let bsv = parseFloat(blurStrengthInput.value);
         if (isNaN(bsv)) bsv = min;
         const pct = ((bsv - min) / (max - min)) * 100;
