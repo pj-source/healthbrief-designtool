@@ -902,8 +902,8 @@
           vec4 color = vec4(0.0);
           float total = 0.0;
 
-          // Number of samples for the blur
-          const int samples = 16;
+          // Increased samples for smoother blur at higher strengths
+          const int samples = 32;
 
           for (int i = 0; i < samples; i++) {
             float offset = (float(i) - float(samples) / 2.0) / float(samples);
