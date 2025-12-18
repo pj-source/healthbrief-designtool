@@ -64,7 +64,47 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 0px;
+      margin-bottom: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      background: #ebe3d8;
+      border-radius: 4px;
+      padding: 3px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 6px 12px;
+      border: none;
+      background: transparent;
+      color: #6b5b4b;
+      font-size: 0.78rem;
+      font-weight: 400;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: all 0.2s ease;
+    }
+
+    .tab:hover {
+      color: #3a2b1f;
+    }
+
+    .tab.active {
+      background: #F9F7F4;
+      color: #201711;
+      font-weight: 500;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
     }
 
     .panel-logo {
@@ -342,6 +382,26 @@
       );
     }
 
+    #blurStrength.pill-range {
+      background: linear-gradient(
+        to right,
+        #80796F 0%,
+        #80796F var(--blur-strength-fill, 0%),
+        #F2ECE3 var(--blur-strength-fill, 0%),
+        #F2ECE3 100%
+      );
+    }
+
+    #blurAngle.pill-range {
+      background: linear-gradient(
+        to right,
+        #80796F 0%,
+        #80796F var(--blur-angle-fill, 50%),
+        #F2ECE3 var(--blur-angle-fill, 50%),
+        #F2ECE3 100%
+      );
+    }
+
     input[type="range"].pill-range::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
@@ -473,6 +533,60 @@
       background: #140c08;
     }
 
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #f2ece3;
+      transition: background-color 0.3s ease;
+      border-radius: 4px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: #80796F;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+      border-radius: 4px;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: #80796F;
+    }
+
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+      background-color: #F9F7F4;
+    }
+
+    .toggle-slider:hover {
+      background-color: #ebe3d8;
+    }
+
+    .toggle-switch input:checked + .toggle-slider:hover {
+      background-color: #726b62;
+    }
+
     small.hint {
       position: fixed;
       bottom: 0.75rem;
@@ -537,6 +651,12 @@
       <button type="button" id="resetBtn" class="reset-btn">Reset</button>
     </div>
 
+    <div class="tabs">
+      <button class="tab active" data-tab="image">Image</button>
+      <button class="tab" data-tab="graphics">Graphics</button>
+    </div>
+
+    <div id="imageTab" class="tab-content active">
     <div class="panel-section-title">Background</div>
     <div class="field">
       <label>Image</label>
@@ -549,7 +669,43 @@
     </div>
     <input id="bgImage" type="file" accept="image/*" style="display:none" />
 
+    <div class="field slider-field">
+      <label>Blur Strength <span id="blurStrengthValue" class="slider-value">0.00</span></label>
+      <div class="slider-wrapper">
+        <div class="slider-shell">
+          <input id="blurStrength" type="range" step="0.001" min="0" max="0.2" value="0" class="pill-range" />
+        </div>
+      </div>
+    </div>
+
+    <div class="field slider-field">
+      <label>Blur Angle <span id="blurAngleValue" class="slider-value">-127°</span></label>
+      <div class="slider-wrapper">
+        <div class="slider-shell">
+          <input id="blurAngle" type="range" step="1" min="-180" max="180" value="-127" class="pill-range" />
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="blurTapered">Tapered Blur</label>
+      <label class="toggle-switch">
+        <input id="blurTapered" type="checkbox" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    </div>
+
+    <div id="graphicsTab" class="tab-content">
     <div class="panel-section-title">Shape &amp; Grid</div>
+    <div class="field">
+      <label for="showGrid">Show Grid</label>
+      <label class="toggle-switch">
+        <input id="showGrid" type="checkbox" checked />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
     <div class="field">
       <label for="seed">Shape Seed</label>
       <div class="field-inline">
@@ -563,11 +719,6 @@
       </div>
     </div>
     <input id="seed" type="hidden" value="001" />
-
-    <div class="field">
-      <label for="showGrid">Show Grid</label>
-      <input id="showGrid" type="checkbox" checked class="pill-input" style="width: 20px; height: 20px; cursor: pointer;" />
-    </div>
 
     <div class="field">
       <label for="cols">Columns</label>
@@ -663,6 +814,7 @@
         </div>
       </div>
     </div>
+    </div>
 
     <button id="render" class="primary-block">Export</button>
   </div>
@@ -712,6 +864,161 @@
     const ctx = canvas.getContext("2d");
 
     let bgImage = null;
+    let blurCanvas = null;
+    let gl = null;
+    let blurProgram = null;
+
+    // Initialize WebGL for motion blur
+    function initWebGL() {
+      blurCanvas = document.createElement('canvas');
+      gl = blurCanvas.getContext('webgl') || blurCanvas.getContext('experimental-webgl');
+
+      if (!gl) {
+        console.warn('WebGL not supported, motion blur disabled');
+        return false;
+      }
+
+      // Vertex shader
+      const vertexShaderSource = `
+        attribute vec2 a_position;
+        attribute vec2 a_texCoord;
+        varying vec2 v_texCoord;
+        void main() {
+          gl_Position = vec4(a_position, 0.0, 1.0);
+          v_texCoord = a_texCoord;
+        }
+      `;
+
+      // Fragment shader with directional motion blur
+      const fragmentShaderSource = `
+        precision mediump float;
+        uniform sampler2D u_image;
+        uniform vec2 u_blurDirection;
+        uniform float u_blurStrength;
+        uniform bool u_tapered;
+        varying vec2 v_texCoord;
+
+        void main() {
+          vec4 color = vec4(0.0);
+          float total = 0.0;
+
+          const int samples = 16;
+
+          for (int i = 0; i < samples; i++) {
+            float offset = (float(i) - float(samples) / 2.0) / float(samples);
+            vec2 sampleCoord = v_texCoord + u_blurDirection * offset * u_blurStrength;
+
+            float weight = 1.0;
+            if (u_tapered) {
+              // Gaussian-like taper for smoother blur
+              float sigma = 0.5;
+              weight = exp(-(offset * offset) / (2.0 * sigma * sigma));
+            }
+
+            color += texture2D(u_image, sampleCoord) * weight;
+            total += weight;
+          }
+
+          gl_FragColor = color / total;
+        }
+      `;
+
+      // Compile shaders
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      gl.shaderSource(vertexShader, vertexShaderSource);
+      gl.compileShader(vertexShader);
+
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(fragmentShader, fragmentShaderSource);
+      gl.compileShader(fragmentShader);
+
+      // Create program
+      blurProgram = gl.createProgram();
+      gl.attachShader(blurProgram, vertexShader);
+      gl.attachShader(blurProgram, fragmentShader);
+      gl.linkProgram(blurProgram);
+
+      if (!gl.getProgramParameter(blurProgram, gl.LINK_STATUS)) {
+        console.error('Unable to initialize shader program');
+        return false;
+      }
+
+      return true;
+    }
+
+    // Apply motion blur using WebGL
+    function applyMotionBlur(image, width, height, blurStrength, blurAngle, tapered) {
+      if (!gl || !blurProgram || blurStrength === 0) {
+        return image;
+      }
+
+      // Set canvas size
+      blurCanvas.width = width;
+      blurCanvas.height = height;
+      gl.viewport(0, 0, width, height);
+
+      // Use program
+      gl.useProgram(blurProgram);
+
+      // Create texture from image
+      const texture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+
+      // Set up geometry (full screen quad)
+      const positionBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        -1, -1,  1, -1,  -1, 1,
+        -1, 1,   1, -1,   1, 1
+      ]), gl.STATIC_DRAW);
+
+      const texCoordBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        0, 1,  1, 1,  0, 0,
+        0, 0,  1, 1,  1, 0
+      ]), gl.STATIC_DRAW);
+
+      // Set attributes
+      const positionLocation = gl.getAttribLocation(blurProgram, 'a_position');
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.enableVertexAttribArray(positionLocation);
+      gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+      const texCoordLocation = gl.getAttribLocation(blurProgram, 'a_texCoord');
+      gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+      gl.enableVertexAttribArray(texCoordLocation);
+      gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
+
+      // Set uniforms
+      const angleRad = blurAngle * Math.PI / 180;
+      const blurDirectionX = Math.cos(angleRad);
+      const blurDirectionY = Math.sin(angleRad);
+
+      const blurDirectionLocation = gl.getUniformLocation(blurProgram, 'u_blurDirection');
+      gl.uniform2f(blurDirectionLocation, blurDirectionX, blurDirectionY);
+
+      const blurStrengthLocation = gl.getUniformLocation(blurProgram, 'u_blurStrength');
+      gl.uniform1f(blurStrengthLocation, blurStrength);
+
+      const taperedLocation = gl.getUniformLocation(blurProgram, 'u_tapered');
+      gl.uniform1i(taperedLocation, tapered ? 1 : 0);
+
+      // Draw
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+      // Clean up
+      gl.deleteTexture(texture);
+      gl.deleteBuffer(positionBuffer);
+      gl.deleteBuffer(texCoordBuffer);
+
+      return blurCanvas;
+    }
 
     function updateCanvasSize(cols, rows) {
       const baseW = BASE_WIDTH * SCALE_FACTOR;
@@ -742,7 +1049,36 @@
         const dh = bgImage.height * scale;
         const dx = (w - dw) / 2;
         const dy = (h - dh) / 2;
-        ctx.drawImage(bgImage, dx, dy, dw, dh);
+
+        const blurStrength = parseFloat(document.getElementById('blurStrength').value) || 0;
+        const blurAngle = parseFloat(document.getElementById('blurAngle').value) || -127;
+        const blurTapered = document.getElementById('blurTapered').checked;
+
+        if (blurStrength > 0 && gl) {
+          // Apply WebGL motion blur
+          const blurredImage = applyMotionBlur(bgImage, Math.floor(dw), Math.floor(dh), blurStrength, blurAngle, blurTapered);
+
+          // Apply additional Gaussian blur to smooth out stepping artifacts
+          // Use a temporary canvas with padding to avoid edge darkening
+          const padding = 50; // Extra space around edges
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = Math.floor(dw) + padding * 2;
+          tempCanvas.height = Math.floor(dh) + padding * 2;
+          const tempCtx = tempCanvas.getContext('2d');
+
+          // Draw blurred image in center with padding
+          tempCtx.drawImage(blurredImage, padding, padding, Math.floor(dw), Math.floor(dh));
+
+          // Apply Gaussian blur on temp canvas
+          tempCtx.filter = 'blur(16px)';
+          tempCtx.drawImage(tempCanvas, 0, 0);
+          tempCtx.filter = 'none';
+
+          // Draw only the center portion (without padding) to main canvas
+          ctx.drawImage(tempCanvas, padding, padding, Math.floor(dw), Math.floor(dh), dx, dy, dw, dh);
+        } else {
+          ctx.drawImage(bgImage, dx, dy, dw, dh);
+        }
       } else {
         ctx.fillStyle = "#020304";
         ctx.fillRect(0, 0, w, h);
@@ -907,8 +1243,13 @@
     const strokeMaxInput = document.getElementById("strokeMax");
     const coverageInput = document.getElementById("coverage");
     const noiseInput = document.getElementById("noise");
+    const blurStrengthInput = document.getElementById("blurStrength");
+    const blurAngleInput = document.getElementById("blurAngle");
+    const blurTaperedCheckbox = document.getElementById("blurTapered");
     const coverageValueLabel = document.getElementById("coverageValue");
     const noiseValueLabel = document.getElementById("noiseValue");
+    const blurStrengthValueLabel = document.getElementById("blurStrengthValue");
+    const blurAngleValueLabel = document.getElementById("blurAngleValue");
     const lineColorPresetInput = document.getElementById("lineColorPreset");
     const colorChips = document.getElementById("colorChips");
     const bgInput = document.getElementById("bgImage");
@@ -935,7 +1276,10 @@
       noise: 0.20,
       color: 'clay',
       bgImage: null,
-      showGrid: true
+      showGrid: true,
+      blurStrength: 0,
+      blurAngle: -127,
+      blurTapered: false
     };
 
     function getStrokeColor() {
@@ -982,6 +1326,11 @@
 
       updateCanvasSize(cols, rows);
       drawPattern(seed, cols, rows, config);
+
+      // Save state to localStorage
+      if (typeof saveState === 'function') {
+        saveState();
+      }
     }
 
     renderBtn.addEventListener("click", regenerate);
@@ -1001,6 +1350,7 @@
     strokeMinInput.addEventListener("change", regenerate);
     strokeMaxInput.addEventListener("change", regenerate);
     showGridCheckbox.addEventListener("change", regenerate);
+    blurTaperedCheckbox.addEventListener("change", regenerate);
 
     coverageInput.addEventListener("input", () => {
       const min = parseFloat(coverageInput.min) || 0;
@@ -1021,6 +1371,28 @@
       const pct = ((v - min) / (max - min)) * 100;
       document.documentElement.style.setProperty('--noise-fill', pct + '%');
       if (noiseValueLabel) noiseValueLabel.textContent = v.toFixed(2);
+      regenerate();
+    });
+
+    blurStrengthInput.addEventListener("input", () => {
+      const min = parseFloat(blurStrengthInput.min) || 0;
+      const max = parseFloat(blurStrengthInput.max) || 0.2;
+      let v = parseFloat(blurStrengthInput.value);
+      if (isNaN(v)) v = min;
+      const pct = ((v - min) / (max - min)) * 100;
+      document.documentElement.style.setProperty('--blur-strength-fill', pct + '%');
+      if (blurStrengthValueLabel) blurStrengthValueLabel.textContent = v.toFixed(2);
+      regenerate();
+    });
+
+    blurAngleInput.addEventListener("input", () => {
+      const min = parseFloat(blurAngleInput.min) || -180;
+      const max = parseFloat(blurAngleInput.max) || 180;
+      let v = parseFloat(blurAngleInput.value);
+      if (isNaN(v)) v = min;
+      const pct = ((v - min) / (max - min)) * 100;
+      document.documentElement.style.setProperty('--blur-angle-fill', pct + '%');
+      if (blurAngleValueLabel) blurAngleValueLabel.textContent = Math.round(v) + '°';
       regenerate();
     });
 
@@ -1048,6 +1420,7 @@
       if (!file) {
         bgImage = null;
         bgFileLabel.textContent = "No file chosen";
+        saveState();
         regenerate();
         return;
       }
@@ -1057,6 +1430,7 @@
         const img = new Image();
         img.onload = () => {
           bgImage = img;
+          saveState();
           regenerate();
         };
         img.src = reader.result;
@@ -1094,6 +1468,13 @@
     });
 
     resetBtn.addEventListener("click", () => {
+      // Clear localStorage
+      try {
+        localStorage.removeItem('healthbrief-designtool-state');
+      } catch (e) {
+        console.warn('Could not clear localStorage:', e);
+      }
+
       // Reset all values to defaults
       seedInput.value = defaults.seed;
       colsInput.value = defaults.cols;
@@ -1102,6 +1483,9 @@
       strokeMaxInput.value = defaults.strokeMax;
       coverageInput.value = defaults.coverage;
       noiseInput.value = defaults.noise;
+      blurStrengthInput.value = defaults.blurStrength;
+      blurAngleInput.value = defaults.blurAngle;
+      blurTaperedCheckbox.checked = defaults.blurTapered;
       lineColorPresetInput.value = defaults.color;
       showGridCheckbox.checked = defaults.showGrid;
 
@@ -1128,6 +1512,14 @@
       const noisePct = ((defaults.noise - 0) / (1.0 - 0)) * 100;
       document.documentElement.style.setProperty('--noise-fill', noisePct + '%');
       noiseValueLabel.textContent = defaults.noise.toFixed(2);
+
+      const blurStrengthPct = ((defaults.blurStrength - 0) / (0.2 - 0)) * 100;
+      document.documentElement.style.setProperty('--blur-strength-fill', blurStrengthPct + '%');
+      blurStrengthValueLabel.textContent = defaults.blurStrength.toFixed(2);
+
+      const blurAnglePct = ((defaults.blurAngle - (-180)) / (180 - (-180))) * 100;
+      document.documentElement.style.setProperty('--blur-angle-fill', blurAnglePct + '%');
+      blurAngleValueLabel.textContent = defaults.blurAngle + '°';
 
       regenerate();
     });
@@ -1177,7 +1569,132 @@
         document.documentElement.style.setProperty('--noise-fill', pct + '%');
         if (noiseValueLabel) noiseValueLabel.textContent = nv.toFixed(2);
       }
+      if (blurStrengthInput) {
+        const min = parseFloat(blurStrengthInput.min) || 0;
+        const max = parseFloat(blurStrengthInput.max) || 0.2;
+        let bsv = parseFloat(blurStrengthInput.value);
+        if (isNaN(bsv)) bsv = min;
+        const pct = ((bsv - min) / (max - min)) * 100;
+        document.documentElement.style.setProperty('--blur-strength-fill', pct + '%');
+        if (blurStrengthValueLabel) blurStrengthValueLabel.textContent = bsv.toFixed(2);
+      }
+      if (blurAngleInput) {
+        const min = parseFloat(blurAngleInput.min) || -180;
+        const max = parseFloat(blurAngleInput.max) || 180;
+        let bav = parseFloat(blurAngleInput.value);
+        if (isNaN(bav)) bav = min;
+        const pct = ((bav - min) / (max - min)) * 100;
+        document.documentElement.style.setProperty('--blur-angle-fill', pct + '%');
+        if (blurAngleValueLabel) blurAngleValueLabel.textContent = Math.round(bav) + '°';
+      }
     })();
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const targetTab = tab.getAttribute('data-tab');
+
+        // Remove active class from all tabs and content
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+        // Add active class to clicked tab and corresponding content
+        tab.classList.add('active');
+        if (targetTab === 'image') {
+          document.getElementById('imageTab').classList.add('active');
+        } else if (targetTab === 'graphics') {
+          document.getElementById('graphicsTab').classList.add('active');
+        }
+      });
+    });
+
+    // Save state to localStorage
+    function saveState() {
+      const state = {
+        seed: seedInput.value,
+        cols: colsInput.value,
+        rows: rowsInput.value,
+        strokeMin: strokeMinInput.value,
+        strokeMax: strokeMaxInput.value,
+        coverage: coverageInput.value,
+        noise: noiseInput.value,
+        color: lineColorPresetInput.value,
+        showGrid: showGridCheckbox.checked,
+        blurStrength: blurStrengthInput.value,
+        blurAngle: blurAngleInput.value,
+        blurTapered: blurTaperedCheckbox.checked,
+        bgImageData: bgImage ? bgImage.src : null,
+        bgFileName: bgFileLabel.textContent !== "No file chosen" ? bgFileLabel.textContent : null
+      };
+      try {
+        localStorage.setItem('healthbrief-designtool-state', JSON.stringify(state));
+      } catch (e) {
+        console.warn('Could not save to localStorage:', e);
+      }
+    }
+
+    // Load state from localStorage
+    function loadState() {
+      try {
+        const saved = localStorage.getItem('healthbrief-designtool-state');
+        if (!saved) return;
+
+        const state = JSON.parse(saved);
+
+        // Restore control values
+        if (state.seed) seedInput.value = state.seed;
+        if (state.cols) colsInput.value = state.cols;
+        if (state.rows) rowsInput.value = state.rows;
+        if (state.strokeMin) strokeMinInput.value = state.strokeMin;
+        if (state.strokeMax) strokeMaxInput.value = state.strokeMax;
+        if (state.coverage) coverageInput.value = state.coverage;
+        if (state.noise) noiseInput.value = state.noise;
+        if (state.color) {
+          lineColorPresetInput.value = state.color;
+          document.querySelectorAll(".color-chip").forEach((chip) => {
+            chip.classList.toggle("selected", chip.getAttribute("data-color") === state.color);
+          });
+        }
+        if (typeof state.showGrid === 'boolean') showGridCheckbox.checked = state.showGrid;
+        if (state.blurStrength) blurStrengthInput.value = state.blurStrength;
+        if (state.blurAngle) blurAngleInput.value = state.blurAngle;
+        if (typeof state.blurTapered === 'boolean') blurTaperedCheckbox.checked = state.blurTapered;
+
+        // Restore background image
+        if (state.bgImageData) {
+          const img = new Image();
+          img.onload = () => {
+            bgImage = img;
+            if (state.bgFileName) {
+              bgFileLabel.textContent = state.bgFileName;
+            }
+            // Update slider fills after loading
+            updateAllSliderFills();
+            regenerate();
+          };
+          img.src = state.bgImageData;
+        } else {
+          updateAllSliderFills();
+        }
+      } catch (e) {
+        console.warn('Could not load from localStorage:', e);
+      }
+    }
+
+    // Helper to update all slider fills
+    function updateAllSliderFills() {
+      // Trigger input events to update slider fills
+      coverageInput.dispatchEvent(new Event('input'));
+      noiseInput.dispatchEvent(new Event('input'));
+      blurStrengthInput.dispatchEvent(new Event('input'));
+      blurAngleInput.dispatchEvent(new Event('input'));
+    }
+
+    // Initialize WebGL
+    initWebGL();
+
+    // Load saved state on page load
+    loadState();
 
     regenerate();
   </script>
