@@ -382,12 +382,22 @@
       );
     }
 
-    #motionBlur.pill-range {
+    #blurStrength.pill-range {
       background: linear-gradient(
         to right,
         #80796F 0%,
-        #80796F var(--motion-blur-fill, 0%),
-        #F2ECE3 var(--motion-blur-fill, 0%),
+        #80796F var(--blur-strength-fill, 0%),
+        #F2ECE3 var(--blur-strength-fill, 0%),
+        #F2ECE3 100%
+      );
+    }
+
+    #blurAngle.pill-range {
+      background: linear-gradient(
+        to right,
+        #80796F 0%,
+        #80796F var(--blur-angle-fill, 50%),
+        #F2ECE3 var(--blur-angle-fill, 50%),
         #F2ECE3 100%
       );
     }
@@ -660,10 +670,19 @@
     <input id="bgImage" type="file" accept="image/*" style="display:none" />
 
     <div class="field slider-field">
-      <label>Motion Blur <span id="motionBlurValue" class="slider-value">0</span></label>
+      <label>Blur Strength <span id="blurStrengthValue" class="slider-value">0.00</span></label>
       <div class="slider-wrapper">
         <div class="slider-shell">
-          <input id="motionBlur" type="range" step="1" min="0" max="20" value="0" class="pill-range" />
+          <input id="blurStrength" type="range" step="0.01" min="0" max="0.05" value="0" class="pill-range" />
+        </div>
+      </div>
+    </div>
+
+    <div class="field slider-field">
+      <label>Blur Angle <span id="blurAngleValue" class="slider-value">-127°</span></label>
+      <div class="slider-wrapper">
+        <div class="slider-shell">
+          <input id="blurAngle" type="range" step="1" min="-180" max="180" value="-127" class="pill-range" />
         </div>
       </div>
     </div>
@@ -837,6 +856,150 @@
     const ctx = canvas.getContext("2d");
 
     let bgImage = null;
+    let blurCanvas = null;
+    let gl = null;
+    let blurProgram = null;
+
+    // Initialize WebGL for motion blur
+    function initWebGL() {
+      blurCanvas = document.createElement('canvas');
+      gl = blurCanvas.getContext('webgl') || blurCanvas.getContext('experimental-webgl');
+
+      if (!gl) {
+        console.warn('WebGL not supported, motion blur disabled');
+        return false;
+      }
+
+      // Vertex shader
+      const vertexShaderSource = `
+        attribute vec2 a_position;
+        attribute vec2 a_texCoord;
+        varying vec2 v_texCoord;
+        void main() {
+          gl_Position = vec4(a_position, 0.0, 1.0);
+          v_texCoord = a_texCoord;
+        }
+      `;
+
+      // Fragment shader with directional motion blur
+      const fragmentShaderSource = `
+        precision mediump float;
+        uniform sampler2D u_image;
+        uniform vec2 u_blurDirection;
+        uniform float u_blurStrength;
+        varying vec2 v_texCoord;
+
+        void main() {
+          vec4 color = vec4(0.0);
+          float total = 0.0;
+
+          // Number of samples for the blur
+          const int samples = 16;
+
+          for (int i = 0; i < samples; i++) {
+            float offset = (float(i) - float(samples) / 2.0) / float(samples);
+            vec2 sampleCoord = v_texCoord + u_blurDirection * offset * u_blurStrength;
+            color += texture2D(u_image, sampleCoord);
+            total += 1.0;
+          }
+
+          gl_FragColor = color / total;
+        }
+      `;
+
+      // Compile shaders
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      gl.shaderSource(vertexShader, vertexShaderSource);
+      gl.compileShader(vertexShader);
+
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(fragmentShader, fragmentShaderSource);
+      gl.compileShader(fragmentShader);
+
+      // Create program
+      blurProgram = gl.createProgram();
+      gl.attachShader(blurProgram, vertexShader);
+      gl.attachShader(blurProgram, fragmentShader);
+      gl.linkProgram(blurProgram);
+
+      if (!gl.getProgramParameter(blurProgram, gl.LINK_STATUS)) {
+        console.error('Unable to initialize shader program');
+        return false;
+      }
+
+      return true;
+    }
+
+    // Apply motion blur using WebGL
+    function applyMotionBlur(image, width, height, blurStrength, blurAngle) {
+      if (!gl || !blurProgram || blurStrength === 0) {
+        return image;
+      }
+
+      // Set canvas size
+      blurCanvas.width = width;
+      blurCanvas.height = height;
+      gl.viewport(0, 0, width, height);
+
+      // Use program
+      gl.useProgram(blurProgram);
+
+      // Create texture from image
+      const texture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+
+      // Set up geometry (full screen quad)
+      const positionBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        -1, -1,  1, -1,  -1, 1,
+        -1, 1,   1, -1,   1, 1
+      ]), gl.STATIC_DRAW);
+
+      const texCoordBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        0, 1,  1, 1,  0, 0,
+        0, 0,  1, 1,  1, 0
+      ]), gl.STATIC_DRAW);
+
+      // Set attributes
+      const positionLocation = gl.getAttribLocation(blurProgram, 'a_position');
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.enableVertexAttribArray(positionLocation);
+      gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+      const texCoordLocation = gl.getAttribLocation(blurProgram, 'a_texCoord');
+      gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+      gl.enableVertexAttribArray(texCoordLocation);
+      gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
+
+      // Set uniforms
+      const angleRad = blurAngle * Math.PI / 180;
+      const blurDirectionX = Math.cos(angleRad);
+      const blurDirectionY = Math.sin(angleRad);
+
+      const blurDirectionLocation = gl.getUniformLocation(blurProgram, 'u_blurDirection');
+      gl.uniform2f(blurDirectionLocation, blurDirectionX, blurDirectionY);
+
+      const blurStrengthLocation = gl.getUniformLocation(blurProgram, 'u_blurStrength');
+      gl.uniform1f(blurStrengthLocation, blurStrength);
+
+      // Draw
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+      // Clean up
+      gl.deleteTexture(texture);
+      gl.deleteBuffer(positionBuffer);
+      gl.deleteBuffer(texCoordBuffer);
+
+      return blurCanvas;
+    }
 
     function updateCanvasSize(cols, rows) {
       const baseW = BASE_WIDTH * SCALE_FACTOR;
@@ -868,22 +1031,13 @@
         const dx = (w - dw) / 2;
         const dy = (h - dh) / 2;
 
-        const motionBlurAmount = parseFloat(document.getElementById('motionBlur').value) || 0;
+        const blurStrength = parseFloat(document.getElementById('blurStrength').value) || 0;
+        const blurAngle = parseFloat(document.getElementById('blurAngle').value) || -127;
 
-        if (motionBlurAmount > 0) {
-          // Apply motion blur by drawing image multiple times with offsets
-          const blurAngle = -127 * Math.PI / 180; // Match diagonal pattern angle
-          const steps = Math.ceil(motionBlurAmount / 2);
-          const offsetX = Math.cos(blurAngle) * (motionBlurAmount / steps);
-          const offsetY = Math.sin(blurAngle) * (motionBlurAmount / steps);
-
-          ctx.globalAlpha = 1 / (steps + 1);
-          for (let i = 0; i <= steps; i++) {
-            const blurX = dx + offsetX * i;
-            const blurY = dy + offsetY * i;
-            ctx.drawImage(bgImage, blurX, blurY, dw, dh);
-          }
-          ctx.globalAlpha = 1;
+        if (blurStrength > 0 && gl) {
+          // Apply WebGL motion blur
+          const blurredImage = applyMotionBlur(bgImage, Math.floor(dw), Math.floor(dh), blurStrength, blurAngle);
+          ctx.drawImage(blurredImage, dx, dy, dw, dh);
         } else {
           ctx.drawImage(bgImage, dx, dy, dw, dh);
         }
@@ -1051,10 +1205,12 @@
     const strokeMaxInput = document.getElementById("strokeMax");
     const coverageInput = document.getElementById("coverage");
     const noiseInput = document.getElementById("noise");
-    const motionBlurInput = document.getElementById("motionBlur");
+    const blurStrengthInput = document.getElementById("blurStrength");
+    const blurAngleInput = document.getElementById("blurAngle");
     const coverageValueLabel = document.getElementById("coverageValue");
     const noiseValueLabel = document.getElementById("noiseValue");
-    const motionBlurValueLabel = document.getElementById("motionBlurValue");
+    const blurStrengthValueLabel = document.getElementById("blurStrengthValue");
+    const blurAngleValueLabel = document.getElementById("blurAngleValue");
     const lineColorPresetInput = document.getElementById("lineColorPreset");
     const colorChips = document.getElementById("colorChips");
     const bgInput = document.getElementById("bgImage");
@@ -1082,7 +1238,8 @@
       color: 'clay',
       bgImage: null,
       showGrid: true,
-      motionBlur: 0
+      blurStrength: 0,
+      blurAngle: -127
     };
 
     function getStrokeColor() {
@@ -1171,14 +1328,25 @@
       regenerate();
     });
 
-    motionBlurInput.addEventListener("input", () => {
-      const min = parseFloat(motionBlurInput.min) || 0;
-      const max = parseFloat(motionBlurInput.max) || 20;
-      let v = parseFloat(motionBlurInput.value);
+    blurStrengthInput.addEventListener("input", () => {
+      const min = parseFloat(blurStrengthInput.min) || 0;
+      const max = parseFloat(blurStrengthInput.max) || 0.05;
+      let v = parseFloat(blurStrengthInput.value);
       if (isNaN(v)) v = min;
       const pct = ((v - min) / (max - min)) * 100;
-      document.documentElement.style.setProperty('--motion-blur-fill', pct + '%');
-      if (motionBlurValueLabel) motionBlurValueLabel.textContent = Math.round(v);
+      document.documentElement.style.setProperty('--blur-strength-fill', pct + '%');
+      if (blurStrengthValueLabel) blurStrengthValueLabel.textContent = v.toFixed(2);
+      regenerate();
+    });
+
+    blurAngleInput.addEventListener("input", () => {
+      const min = parseFloat(blurAngleInput.min) || -180;
+      const max = parseFloat(blurAngleInput.max) || 180;
+      let v = parseFloat(blurAngleInput.value);
+      if (isNaN(v)) v = min;
+      const pct = ((v - min) / (max - min)) * 100;
+      document.documentElement.style.setProperty('--blur-angle-fill', pct + '%');
+      if (blurAngleValueLabel) blurAngleValueLabel.textContent = Math.round(v) + '°';
       regenerate();
     });
 
@@ -1260,7 +1428,8 @@
       strokeMaxInput.value = defaults.strokeMax;
       coverageInput.value = defaults.coverage;
       noiseInput.value = defaults.noise;
-      motionBlurInput.value = defaults.motionBlur;
+      blurStrengthInput.value = defaults.blurStrength;
+      blurAngleInput.value = defaults.blurAngle;
       lineColorPresetInput.value = defaults.color;
       showGridCheckbox.checked = defaults.showGrid;
 
@@ -1288,9 +1457,13 @@
       document.documentElement.style.setProperty('--noise-fill', noisePct + '%');
       noiseValueLabel.textContent = defaults.noise.toFixed(2);
 
-      const motionBlurPct = ((defaults.motionBlur - 0) / (20 - 0)) * 100;
-      document.documentElement.style.setProperty('--motion-blur-fill', motionBlurPct + '%');
-      motionBlurValueLabel.textContent = defaults.motionBlur;
+      const blurStrengthPct = ((defaults.blurStrength - 0) / (0.05 - 0)) * 100;
+      document.documentElement.style.setProperty('--blur-strength-fill', blurStrengthPct + '%');
+      blurStrengthValueLabel.textContent = defaults.blurStrength.toFixed(2);
+
+      const blurAnglePct = ((defaults.blurAngle - (-180)) / (180 - (-180))) * 100;
+      document.documentElement.style.setProperty('--blur-angle-fill', blurAnglePct + '%');
+      blurAngleValueLabel.textContent = defaults.blurAngle + '°';
 
       regenerate();
     });
@@ -1340,14 +1513,23 @@
         document.documentElement.style.setProperty('--noise-fill', pct + '%');
         if (noiseValueLabel) noiseValueLabel.textContent = nv.toFixed(2);
       }
-      if (motionBlurInput) {
-        const min = parseFloat(motionBlurInput.min) || 0;
-        const max = parseFloat(motionBlurInput.max) || 20;
-        let mbv = parseFloat(motionBlurInput.value);
-        if (isNaN(mbv)) mbv = min;
-        const pct = ((mbv - min) / (max - min)) * 100;
-        document.documentElement.style.setProperty('--motion-blur-fill', pct + '%');
-        if (motionBlurValueLabel) motionBlurValueLabel.textContent = Math.round(mbv);
+      if (blurStrengthInput) {
+        const min = parseFloat(blurStrengthInput.min) || 0;
+        const max = parseFloat(blurStrengthInput.max) || 0.05;
+        let bsv = parseFloat(blurStrengthInput.value);
+        if (isNaN(bsv)) bsv = min;
+        const pct = ((bsv - min) / (max - min)) * 100;
+        document.documentElement.style.setProperty('--blur-strength-fill', pct + '%');
+        if (blurStrengthValueLabel) blurStrengthValueLabel.textContent = bsv.toFixed(2);
+      }
+      if (blurAngleInput) {
+        const min = parseFloat(blurAngleInput.min) || -180;
+        const max = parseFloat(blurAngleInput.max) || 180;
+        let bav = parseFloat(blurAngleInput.value);
+        if (isNaN(bav)) bav = min;
+        const pct = ((bav - min) / (max - min)) * 100;
+        document.documentElement.style.setProperty('--blur-angle-fill', pct + '%');
+        if (blurAngleValueLabel) blurAngleValueLabel.textContent = Math.round(bav) + '°';
       }
     })();
 
@@ -1369,6 +1551,9 @@
         }
       });
     });
+
+    // Initialize WebGL
+    initWebGL();
 
     regenerate();
   </script>
