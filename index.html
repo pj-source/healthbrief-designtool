@@ -1059,7 +1059,7 @@
           const blurredImage = applyMotionBlur(bgImage, Math.floor(dw), Math.floor(dh), blurStrength, blurAngle, blurTapered);
 
           // Apply additional Gaussian blur to smooth out stepping artifacts
-          ctx.filter = 'blur(8px)';
+          ctx.filter = 'blur(16px)';
           ctx.drawImage(blurredImage, dx, dy, dw, dh);
           ctx.filter = 'none';
         } else {
