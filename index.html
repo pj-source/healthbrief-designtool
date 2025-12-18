@@ -1312,6 +1312,11 @@
 
       updateCanvasSize(cols, rows);
       drawPattern(seed, cols, rows, config);
+
+      // Save state to localStorage
+      if (typeof saveState === 'function') {
+        saveState();
+      }
     }
 
     renderBtn.addEventListener("click", regenerate);
@@ -1401,6 +1406,7 @@
       if (!file) {
         bgImage = null;
         bgFileLabel.textContent = "No file chosen";
+        saveState();
         regenerate();
         return;
       }
@@ -1410,6 +1416,7 @@
         const img = new Image();
         img.onload = () => {
           bgImage = img;
+          saveState();
           regenerate();
         };
         img.src = reader.result;
@@ -1447,6 +1454,13 @@
     });
 
     resetBtn.addEventListener("click", () => {
+      // Clear localStorage
+      try {
+        localStorage.removeItem('healthbrief-designtool-state');
+      } catch (e) {
+        console.warn('Could not clear localStorage:', e);
+      }
+
       // Reset all values to defaults
       seedInput.value = defaults.seed;
       colsInput.value = defaults.cols;
@@ -1580,8 +1594,93 @@
       });
     });
 
+    // Save state to localStorage
+    function saveState() {
+      const state = {
+        seed: seedInput.value,
+        cols: colsInput.value,
+        rows: rowsInput.value,
+        strokeMin: strokeMinInput.value,
+        strokeMax: strokeMaxInput.value,
+        coverage: coverageInput.value,
+        noise: noiseInput.value,
+        color: lineColorPresetInput.value,
+        showGrid: showGridCheckbox.checked,
+        blurStrength: blurStrengthInput.value,
+        blurAngle: blurAngleInput.value,
+        blurTapered: blurTaperedCheckbox.checked,
+        bgImageData: bgImage ? bgImage.src : null,
+        bgFileName: bgFileLabel.textContent !== "No file chosen" ? bgFileLabel.textContent : null
+      };
+      try {
+        localStorage.setItem('healthbrief-designtool-state', JSON.stringify(state));
+      } catch (e) {
+        console.warn('Could not save to localStorage:', e);
+      }
+    }
+
+    // Load state from localStorage
+    function loadState() {
+      try {
+        const saved = localStorage.getItem('healthbrief-designtool-state');
+        if (!saved) return;
+
+        const state = JSON.parse(saved);
+
+        // Restore control values
+        if (state.seed) seedInput.value = state.seed;
+        if (state.cols) colsInput.value = state.cols;
+        if (state.rows) rowsInput.value = state.rows;
+        if (state.strokeMin) strokeMinInput.value = state.strokeMin;
+        if (state.strokeMax) strokeMaxInput.value = state.strokeMax;
+        if (state.coverage) coverageInput.value = state.coverage;
+        if (state.noise) noiseInput.value = state.noise;
+        if (state.color) {
+          lineColorPresetInput.value = state.color;
+          document.querySelectorAll(".color-chip").forEach((chip) => {
+            chip.classList.toggle("selected", chip.getAttribute("data-color") === state.color);
+          });
+        }
+        if (typeof state.showGrid === 'boolean') showGridCheckbox.checked = state.showGrid;
+        if (state.blurStrength) blurStrengthInput.value = state.blurStrength;
+        if (state.blurAngle) blurAngleInput.value = state.blurAngle;
+        if (typeof state.blurTapered === 'boolean') blurTaperedCheckbox.checked = state.blurTapered;
+
+        // Restore background image
+        if (state.bgImageData) {
+          const img = new Image();
+          img.onload = () => {
+            bgImage = img;
+            if (state.bgFileName) {
+              bgFileLabel.textContent = state.bgFileName;
+            }
+            // Update slider fills after loading
+            updateAllSliderFills();
+            regenerate();
+          };
+          img.src = state.bgImageData;
+        } else {
+          updateAllSliderFills();
+        }
+      } catch (e) {
+        console.warn('Could not load from localStorage:', e);
+      }
+    }
+
+    // Helper to update all slider fills
+    function updateAllSliderFills() {
+      // Trigger input events to update slider fills
+      coverageInput.dispatchEvent(new Event('input'));
+      noiseInput.dispatchEvent(new Event('input'));
+      blurStrengthInput.dispatchEvent(new Event('input'));
+      blurAngleInput.dispatchEvent(new Event('input'));
+    }
+
     // Initialize WebGL
     initWebGL();
+
+    // Load saved state on page load
+    loadState();
 
     regenerate();
   </script>
