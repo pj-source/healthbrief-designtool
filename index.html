@@ -382,6 +382,16 @@
       );
     }
 
+    #motionBlur.pill-range {
+      background: linear-gradient(
+        to right,
+        #80796F 0%,
+        #80796F var(--motion-blur-fill, 0%),
+        #F2ECE3 var(--motion-blur-fill, 0%),
+        #F2ECE3 100%
+      );
+    }
+
     input[type="range"].pill-range::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
@@ -648,6 +658,15 @@
       </div>
     </div>
     <input id="bgImage" type="file" accept="image/*" style="display:none" />
+
+    <div class="field slider-field">
+      <label>Motion Blur <span id="motionBlurValue" class="slider-value">0</span></label>
+      <div class="slider-wrapper">
+        <div class="slider-shell">
+          <input id="motionBlur" type="range" step="1" min="0" max="20" value="0" class="pill-range" />
+        </div>
+      </div>
+    </div>
     </div>
 
     <div id="graphicsTab" class="tab-content">
@@ -848,7 +867,26 @@
         const dh = bgImage.height * scale;
         const dx = (w - dw) / 2;
         const dy = (h - dh) / 2;
-        ctx.drawImage(bgImage, dx, dy, dw, dh);
+
+        const motionBlurAmount = parseFloat(document.getElementById('motionBlur').value) || 0;
+
+        if (motionBlurAmount > 0) {
+          // Apply motion blur by drawing image multiple times with offsets
+          const blurAngle = -127 * Math.PI / 180; // Match diagonal pattern angle
+          const steps = Math.ceil(motionBlurAmount / 2);
+          const offsetX = Math.cos(blurAngle) * (motionBlurAmount / steps);
+          const offsetY = Math.sin(blurAngle) * (motionBlurAmount / steps);
+
+          ctx.globalAlpha = 1 / (steps + 1);
+          for (let i = 0; i <= steps; i++) {
+            const blurX = dx + offsetX * i;
+            const blurY = dy + offsetY * i;
+            ctx.drawImage(bgImage, blurX, blurY, dw, dh);
+          }
+          ctx.globalAlpha = 1;
+        } else {
+          ctx.drawImage(bgImage, dx, dy, dw, dh);
+        }
       } else {
         ctx.fillStyle = "#020304";
         ctx.fillRect(0, 0, w, h);
@@ -1013,8 +1051,10 @@
     const strokeMaxInput = document.getElementById("strokeMax");
     const coverageInput = document.getElementById("coverage");
     const noiseInput = document.getElementById("noise");
+    const motionBlurInput = document.getElementById("motionBlur");
     const coverageValueLabel = document.getElementById("coverageValue");
     const noiseValueLabel = document.getElementById("noiseValue");
+    const motionBlurValueLabel = document.getElementById("motionBlurValue");
     const lineColorPresetInput = document.getElementById("lineColorPreset");
     const colorChips = document.getElementById("colorChips");
     const bgInput = document.getElementById("bgImage");
@@ -1041,7 +1081,8 @@
       noise: 0.20,
       color: 'clay',
       bgImage: null,
-      showGrid: true
+      showGrid: true,
+      motionBlur: 0
     };
 
     function getStrokeColor() {
@@ -1130,6 +1171,17 @@
       regenerate();
     });
 
+    motionBlurInput.addEventListener("input", () => {
+      const min = parseFloat(motionBlurInput.min) || 0;
+      const max = parseFloat(motionBlurInput.max) || 20;
+      let v = parseFloat(motionBlurInput.value);
+      if (isNaN(v)) v = min;
+      const pct = ((v - min) / (max - min)) * 100;
+      document.documentElement.style.setProperty('--motion-blur-fill', pct + '%');
+      if (motionBlurValueLabel) motionBlurValueLabel.textContent = Math.round(v);
+      regenerate();
+    });
+
     colorChips.addEventListener("click", (event) => {
       const chip = event.target.closest(".color-chip");
       if (!chip) return;
@@ -1208,6 +1260,7 @@
       strokeMaxInput.value = defaults.strokeMax;
       coverageInput.value = defaults.coverage;
       noiseInput.value = defaults.noise;
+      motionBlurInput.value = defaults.motionBlur;
       lineColorPresetInput.value = defaults.color;
       showGridCheckbox.checked = defaults.showGrid;
 
@@ -1234,6 +1287,10 @@
       const noisePct = ((defaults.noise - 0) / (1.0 - 0)) * 100;
       document.documentElement.style.setProperty('--noise-fill', noisePct + '%');
       noiseValueLabel.textContent = defaults.noise.toFixed(2);
+
+      const motionBlurPct = ((defaults.motionBlur - 0) / (20 - 0)) * 100;
+      document.documentElement.style.setProperty('--motion-blur-fill', motionBlurPct + '%');
+      motionBlurValueLabel.textContent = defaults.motionBlur;
 
       regenerate();
     });
@@ -1282,6 +1339,15 @@
         const pct = ((nv - min) / (max - min)) * 100;
         document.documentElement.style.setProperty('--noise-fill', pct + '%');
         if (noiseValueLabel) noiseValueLabel.textContent = nv.toFixed(2);
+      }
+      if (motionBlurInput) {
+        const min = parseFloat(motionBlurInput.min) || 0;
+        const max = parseFloat(motionBlurInput.max) || 20;
+        let mbv = parseFloat(motionBlurInput.value);
+        if (isNaN(mbv)) mbv = min;
+        const pct = ((mbv - min) / (max - min)) * 100;
+        document.documentElement.style.setProperty('--motion-blur-fill', pct + '%');
+        if (motionBlurValueLabel) motionBlurValueLabel.textContent = Math.round(mbv);
       }
     })();
 
