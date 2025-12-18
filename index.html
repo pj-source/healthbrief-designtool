@@ -669,6 +669,7 @@
     </div>
     <input id="bgImage" type="file" accept="image/*" style="display:none" />
 
+    <div class="panel-section-title">Blur</div>
     <div class="field slider-field">
       <label>Blur Strength <span id="blurStrengthValue" class="slider-value">0.00</span></label>
       <div class="slider-wrapper">
@@ -679,10 +680,10 @@
     </div>
 
     <div class="field slider-field">
-      <label>Blur Angle <span id="blurAngleValue" class="slider-value">-127°</span></label>
+      <label>Blur Angle <span id="blurAngleValue" class="slider-value">0°</span></label>
       <div class="slider-wrapper">
         <div class="slider-shell">
-          <input id="blurAngle" type="range" step="1" min="-180" max="180" value="-127" class="pill-range" />
+          <input id="blurAngle" type="range" step="1" min="-180" max="180" value="0" class="pill-range" />
         </div>
       </div>
     </div>
@@ -757,8 +758,8 @@
       </div>
     </div>
 
+    <div class="panel-section-title">Color</div>
     <div class="field color-field">
-      <label>Color</label>
       <div class="color-chips" id="colorChips">
         <button type="button" class="color-chip selected" data-color="clay">
           <span class="color-dot" style="background:#BA4E2F;"></span>
@@ -1278,7 +1279,7 @@
       bgImage: null,
       showGrid: true,
       blurStrength: 0,
-      blurAngle: -127,
+      blurAngle: 0,
       blurTapered: false
     };
 
