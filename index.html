@@ -673,7 +673,7 @@
       <label>Blur Strength <span id="blurStrengthValue" class="slider-value">0.00</span></label>
       <div class="slider-wrapper">
         <div class="slider-shell">
-          <input id="blurStrength" type="range" step="0.001" min="0" max="0.05" value="0" class="pill-range" />
+          <input id="blurStrength" type="range" step="0.001" min="0" max="0.2" value="0" class="pill-range" />
         </div>
       </div>
     </div>
@@ -1059,9 +1059,23 @@
           const blurredImage = applyMotionBlur(bgImage, Math.floor(dw), Math.floor(dh), blurStrength, blurAngle, blurTapered);
 
           // Apply additional Gaussian blur to smooth out stepping artifacts
-          ctx.filter = 'blur(16px)';
-          ctx.drawImage(blurredImage, dx, dy, dw, dh);
-          ctx.filter = 'none';
+          // Use a temporary canvas with padding to avoid edge darkening
+          const padding = 50; // Extra space around edges
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = Math.floor(dw) + padding * 2;
+          tempCanvas.height = Math.floor(dh) + padding * 2;
+          const tempCtx = tempCanvas.getContext('2d');
+
+          // Draw blurred image in center with padding
+          tempCtx.drawImage(blurredImage, padding, padding, Math.floor(dw), Math.floor(dh));
+
+          // Apply Gaussian blur on temp canvas
+          tempCtx.filter = 'blur(16px)';
+          tempCtx.drawImage(tempCanvas, 0, 0);
+          tempCtx.filter = 'none';
+
+          // Draw only the center portion (without padding) to main canvas
+          ctx.drawImage(tempCanvas, padding, padding, Math.floor(dw), Math.floor(dh), dx, dy, dw, dh);
         } else {
           ctx.drawImage(bgImage, dx, dy, dw, dh);
         }
@@ -1362,7 +1376,7 @@
 
     blurStrengthInput.addEventListener("input", () => {
       const min = parseFloat(blurStrengthInput.min) || 0;
-      const max = parseFloat(blurStrengthInput.max) || 0.05;
+      const max = parseFloat(blurStrengthInput.max) || 0.2;
       let v = parseFloat(blurStrengthInput.value);
       if (isNaN(v)) v = min;
       const pct = ((v - min) / (max - min)) * 100;
@@ -1499,7 +1513,7 @@
       document.documentElement.style.setProperty('--noise-fill', noisePct + '%');
       noiseValueLabel.textContent = defaults.noise.toFixed(2);
 
-      const blurStrengthPct = ((defaults.blurStrength - 0) / (0.05 - 0)) * 100;
+      const blurStrengthPct = ((defaults.blurStrength - 0) / (0.2 - 0)) * 100;
       document.documentElement.style.setProperty('--blur-strength-fill', blurStrengthPct + '%');
       blurStrengthValueLabel.textContent = defaults.blurStrength.toFixed(2);
 
@@ -1557,7 +1571,7 @@
       }
       if (blurStrengthInput) {
         const min = parseFloat(blurStrengthInput.min) || 0;
-        const max = parseFloat(blurStrengthInput.max) || 0.05;
+        const max = parseFloat(blurStrengthInput.max) || 0.2;
         let bsv = parseFloat(blurStrengthInput.value);
         if (isNaN(bsv)) bsv = min;
         const pct = ((bsv - min) / (max - min)) * 100;
