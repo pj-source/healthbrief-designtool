@@ -1130,83 +1130,105 @@
       const noise = Math.min(1, Math.max(0, config.noise || 0));
       const strokeColor = config.strokeColor;
 
-      const weights = [];
-      const blobCount = 3 + Math.floor(rand() * 3);
-      const blobs = [];
-      const scale = Math.max(cols, rows);
+      // Check if we can reuse cached pattern data
+      const cacheKey = `${seed}-${cols}-${rows}-${coverage}-${noise}`;
+      const needsNewPattern = patternCache.seed !== cacheKey;
 
-      for (let i = 0; i < blobCount; i++) {
-        const edgeBias = 0.8;
-        let cx, cy;
+      let activeCells, minV, maxV;
 
-        if (rand() < edgeBias) {
-          const side = Math.floor(rand() * 4);
-          if (side === 0) {
-            cx = rand() * cols;
-            cy = rand() * (rows * 0.25);
-          } else if (side === 1) {
-            cx = rand() * cols;
-            cy = rows * (0.75 + rand() * 0.25);
-          } else if (side === 2) {
-            cx = rand() * (cols * 0.25);
-            cy = rand() * rows;
+      if (needsNewPattern) {
+        // Generate new pattern
+        const weights = [];
+        const blobCount = 3 + Math.floor(rand() * 3);
+        const blobs = [];
+        const scale = Math.max(cols, rows);
+
+        for (let i = 0; i < blobCount; i++) {
+          const edgeBias = 0.8;
+          let cx, cy;
+
+          if (rand() < edgeBias) {
+            const side = Math.floor(rand() * 4);
+            if (side === 0) {
+              cx = rand() * cols;
+              cy = rand() * (rows * 0.25);
+            } else if (side === 1) {
+              cx = rand() * cols;
+              cy = rows * (0.75 + rand() * 0.25);
+            } else if (side === 2) {
+              cx = rand() * (cols * 0.25);
+              cy = rand() * rows;
+            } else {
+              cx = cols * (0.75 + rand() * 0.25);
+              cy = rand() * rows;
+            }
           } else {
-            cx = cols * (0.75 + rand() * 0.25);
+            cx = rand() * cols;
             cy = rand() * rows;
+
+            const centerX = cols / 2;
+            const centerY = rows / 2;
+            const centerMarginX = cols * 0.2;
+            const centerMarginY = rows * 0.2;
+
+            if (Math.abs(cx - centerX) < centerMarginX && Math.abs(cy - centerY) < centerMarginY) {
+              if (cx < centerX) cx -= centerMarginX * 0.5;
+              else cx += centerMarginX * 0.5;
+              if (cy < centerY) cy -= centerMarginY * 0.5;
+              else cy += centerMarginY * 0.5;
+            }
           }
-        } else {
-          cx = rand() * cols;
-          cy = rand() * rows;
 
-          const centerX = cols / 2;
-          const centerY = rows / 2;
-          const centerMarginX = cols * 0.2;
-          const centerMarginY = rows * 0.2;
+          const radius = scale * (0.6 + rand() * 0.9);
+          blobs.push({ cx, cy, radius });
+        }
 
-          if (Math.abs(cx - centerX) < centerMarginX && Math.abs(cy - centerY) < centerMarginY) {
-            if (cx < centerX) cx -= centerMarginX * 0.5;
-            else cx += centerMarginX * 0.5;
-            if (cy < centerY) cy -= centerMarginY * 0.5;
-            else cy += centerMarginY * 0.5;
+        for (let yy = 0; yy < rows; yy++) {
+          for (let xx = 0; xx < cols; xx++) {
+            let v = 0;
+            for (const b of blobs) {
+              const dx = xx - b.cx;
+              const dy = yy - b.cy;
+              const d2 = dx * dx + dy * dy;
+              const r2 = b.radius * b.radius;
+              v += Math.exp(-d2 / (2 * r2));
+            }
+            if (noise > 0) {
+              v += (rand() - 0.5) * 2 * noise;
+            }
+            weights.push({ x: xx, y: yy, v });
           }
         }
 
-        const radius = scale * (0.6 + rand() * 0.9);
-        blobs.push({ cx, cy, radius });
-      }
+        weights.sort((a, b) => b.v - a.v);
+        const cutoffIndex = Math.floor(coverage * weights.length);
+        activeCells = weights.slice(0, cutoffIndex);
 
-      for (let yy = 0; yy < rows; yy++) {
-        for (let xx = 0; xx < cols; xx++) {
-          let v = 0;
-          for (const b of blobs) {
-            const dx = xx - b.cx;
-            const dy = yy - b.cy;
-            const d2 = dx * dx + dy * dy;
-            const r2 = b.radius * b.radius;
-            v += Math.exp(-d2 / (2 * r2));
-          }
-          if (noise > 0) {
-            v += (rand() - 0.5) * 2 * noise;
-          }
-          weights.push({ x: xx, y: yy, v });
+        minV = Infinity;
+        maxV = -Infinity;
+        for (const cell of activeCells) {
+          if (cell.v < minV) minV = cell.v;
+          if (cell.v > maxV) maxV = cell.v;
         }
-      }
+        if (!isFinite(minV)) {
+          minV = 0;
+          maxV = 1;
+        } else if (maxV === minV) {
+          maxV = minV + 1;
+        }
 
-      weights.sort((a, b) => b.v - a.v);
-      const cutoffIndex = Math.floor(coverage * weights.length);
-      const activeCells = weights.slice(0, cutoffIndex);
-
-      let minV = Infinity;
-      let maxV = -Infinity;
-      for (const cell of activeCells) {
-        if (cell.v < minV) minV = cell.v;
-        if (cell.v > maxV) maxV = cell.v;
-      }
-      if (!isFinite(minV)) {
-        minV = 0;
-        maxV = 1;
-      } else if (maxV === minV) {
-        maxV = minV + 1;
+        // Cache the pattern data
+        patternCache = {
+          seed: cacheKey,
+          activeCells: activeCells,
+          minV: minV,
+          maxV: maxV
+        };
+      } else {
+        // Reuse cached pattern
+        activeCells = patternCache.activeCells;
+        minV = patternCache.minV;
+        maxV = patternCache.maxV;
       }
 
       function drawStripedCell(cell) {
@@ -1341,6 +1363,14 @@
       noiseData: null
     };
 
+    // Cache for pattern data to avoid recalculating blobs/weights
+    let patternCache = {
+      seed: null,
+      cols: 0,
+      rows: 0,
+      activeCells: null
+    };
+
     // Default values for reset
     const defaults = {
       seed: '001',
@@ -1404,9 +1434,21 @@
       updateCanvasSize(cols, rows);
       drawPattern(seed, cols, rows, config);
 
-      // Save state to localStorage
-      if (typeof saveState === 'function') {
-        saveState();
+      // Save state to localStorage (debounced to reduce writes)
+      if (typeof debouncedSaveState === 'function') {
+        debouncedSaveState();
+      }
+    }
+
+    // requestAnimationFrame batching for slider updates
+    let rafPending = false;
+    function scheduleRegenerate() {
+      if (!rafPending) {
+        rafPending = true;
+        requestAnimationFrame(() => {
+          rafPending = false;
+          regenerate();
+        });
       }
     }
 
@@ -1437,7 +1479,7 @@
       const pct = ((v - min) / (max - min)) * 100;
       document.documentElement.style.setProperty('--coverage-fill', pct + '%');
       if (coverageValueLabel) coverageValueLabel.textContent = v.toFixed(2);
-      regenerate();
+      scheduleRegenerate();
     });
 
     noiseInput.addEventListener("input", () => {
@@ -1448,7 +1490,7 @@
       const pct = ((v - min) / (max - min)) * 100;
       document.documentElement.style.setProperty('--noise-fill', pct + '%');
       if (noiseValueLabel) noiseValueLabel.textContent = v.toFixed(2);
-      regenerate();
+      scheduleRegenerate();
     });
 
     blurStrengthInput.addEventListener("input", () => {
@@ -1459,7 +1501,7 @@
       const pct = ((v - min) / (max - min)) * 100;
       document.documentElement.style.setProperty('--blur-strength-fill', pct + '%');
       if (blurStrengthValueLabel) blurStrengthValueLabel.textContent = v.toFixed(2);
-      regenerate();
+      scheduleRegenerate();
     });
 
     blurAngleInput.addEventListener("input", () => {
@@ -1470,7 +1512,7 @@
       const pct = ((v - min) / (max - min)) * 100;
       document.documentElement.style.setProperty('--blur-angle-fill', pct + '%');
       if (blurAngleValueLabel) blurAngleValueLabel.textContent = Math.round(v) + '°';
-      regenerate();
+      scheduleRegenerate();
     });
 
     grainInput.addEventListener("input", () => {
@@ -1481,7 +1523,7 @@
       const pct = ((v - min) / (max - min)) * 100;
       document.documentElement.style.setProperty('--grain-fill', pct + '%');
       if (grainValueLabel) grainValueLabel.textContent = v.toFixed(2);
-      regenerate();
+      scheduleRegenerate();
     });
 
     colorChips.addEventListener("click", (event) => {
@@ -1702,6 +1744,7 @@
     });
 
     // Save state to localStorage
+    let saveStateTimeout;
     function saveState() {
       const state = {
         seed: seedInput.value,
@@ -1725,6 +1768,12 @@
       } catch (e) {
         console.warn('Could not save to localStorage:', e);
       }
+    }
+
+    // Debounced version of saveState to avoid excessive writes
+    function debouncedSaveState() {
+      clearTimeout(saveStateTimeout);
+      saveStateTimeout = setTimeout(saveState, 500);
     }
 
     // Load state from localStorage
