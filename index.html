@@ -695,6 +695,16 @@
         <span class="toggle-slider"></span>
       </label>
     </div>
+
+    <div class="panel-section-title">Adjustments</div>
+    <div class="field slider-field">
+      <label>Grain <span id="grainValue" class="slider-value">0.00</span></label>
+      <div class="slider-wrapper">
+        <div class="slider-shell">
+          <input id="grain" type="range" step="0.01" min="0" max="1.0" value="0" class="pill-range" />
+        </div>
+      </div>
+    </div>
     </div>
 
     <div id="graphicsTab" class="tab-content">
@@ -1054,6 +1064,9 @@
         const blurStrength = parseFloat(document.getElementById('blurStrength').value) || 0;
         const blurAngle = parseFloat(document.getElementById('blurAngle').value) || -127;
         const blurTapered = document.getElementById('blurTapered').checked;
+        const grainAmount = parseFloat(document.getElementById('grain').value) || 0;
+
+        let processedImage = bgImage;
 
         if (blurStrength > 0 && gl) {
           // Apply WebGL motion blur
@@ -1075,10 +1088,52 @@
           tempCtx.drawImage(tempCanvas, 0, 0);
           tempCtx.filter = 'none';
 
-          // Draw only the center portion (without padding) to main canvas
-          ctx.drawImage(tempCanvas, padding, padding, Math.floor(dw), Math.floor(dh), dx, dy, dw, dh);
-        } else {
+          // Create a new canvas for the processed image
+          const processedCanvas = document.createElement('canvas');
+          processedCanvas.width = Math.floor(dw);
+          processedCanvas.height = Math.floor(dh);
+          const processedCtx = processedCanvas.getContext('2d');
+
+          // Draw only the center portion (without padding)
+          processedCtx.drawImage(tempCanvas, padding, padding, Math.floor(dw), Math.floor(dh), 0, 0, Math.floor(dw), Math.floor(dh));
+
+          processedImage = processedCanvas;
+        }
+
+        // Apply grain if needed
+        if (grainAmount > 0) {
+          const grainCanvas = document.createElement('canvas');
+          grainCanvas.width = Math.floor(dw);
+          grainCanvas.height = Math.floor(dh);
+          const grainCtx = grainCanvas.getContext('2d');
+
+          // Draw the current image (either original or blurred)
+          if (processedImage === bgImage) {
+            grainCtx.drawImage(bgImage, 0, 0, Math.floor(dw), Math.floor(dh));
+          } else {
+            grainCtx.drawImage(processedImage, 0, 0);
+          }
+
+          // Apply grain
+          const imageData = grainCtx.getImageData(0, 0, Math.floor(dw), Math.floor(dh));
+          const data = imageData.data;
+
+          for (let i = 0; i < data.length; i += 4) {
+            const grainValue = (Math.random() - 0.5) * grainAmount * 255;
+            data[i] += grainValue;     // R
+            data[i + 1] += grainValue; // G
+            data[i + 2] += grainValue; // B
+          }
+
+          grainCtx.putImageData(imageData, 0, 0);
+          processedImage = grainCanvas;
+        }
+
+        // Draw the final processed image
+        if (processedImage === bgImage) {
           ctx.drawImage(bgImage, dx, dy, dw, dh);
+        } else {
+          ctx.drawImage(processedImage, 0, 0, Math.floor(dw), Math.floor(dh), dx, dy, dw, dh);
         }
       } else {
         ctx.fillStyle = "#020304";
@@ -1247,9 +1302,11 @@
     const blurStrengthInput = document.getElementById("blurStrength");
     const blurAngleInput = document.getElementById("blurAngle");
     const blurTaperedCheckbox = document.getElementById("blurTapered");
+    const grainInput = document.getElementById("grain");
     const coverageValueLabel = document.getElementById("coverageValue");
     const noiseValueLabel = document.getElementById("noiseValue");
     const blurStrengthValueLabel = document.getElementById("blurStrengthValue");
+    const grainValueLabel = document.getElementById("grainValue");
     const blurAngleValueLabel = document.getElementById("blurAngleValue");
     const lineColorPresetInput = document.getElementById("lineColorPreset");
     const colorChips = document.getElementById("colorChips");
@@ -1280,7 +1337,8 @@
       showGrid: true,
       blurStrength: 0,
       blurAngle: 0,
-      blurTapered: false
+      blurTapered: false,
+      grain: 0
     };
 
     function getStrokeColor() {
@@ -1397,6 +1455,17 @@
       regenerate();
     });
 
+    grainInput.addEventListener("input", () => {
+      const min = parseFloat(grainInput.min) || 0;
+      const max = parseFloat(grainInput.max) || 1.0;
+      let v = parseFloat(grainInput.value);
+      if (isNaN(v)) v = min;
+      const pct = ((v - min) / (max - min)) * 100;
+      document.documentElement.style.setProperty('--grain-fill', pct + '%');
+      if (grainValueLabel) grainValueLabel.textContent = v.toFixed(2);
+      regenerate();
+    });
+
     colorChips.addEventListener("click", (event) => {
       const chip = event.target.closest(".color-chip");
       if (!chip) return;
@@ -1487,6 +1556,7 @@
       blurStrengthInput.value = defaults.blurStrength;
       blurAngleInput.value = defaults.blurAngle;
       blurTaperedCheckbox.checked = defaults.blurTapered;
+      grainInput.value = defaults.grain;
       lineColorPresetInput.value = defaults.color;
       showGridCheckbox.checked = defaults.showGrid;
 
@@ -1624,6 +1694,7 @@
         blurStrength: blurStrengthInput.value,
         blurAngle: blurAngleInput.value,
         blurTapered: blurTaperedCheckbox.checked,
+        grain: grainInput.value,
         bgImageData: bgImage ? bgImage.src : null,
         bgFileName: bgFileLabel.textContent !== "No file chosen" ? bgFileLabel.textContent : null
       };
@@ -1660,6 +1731,7 @@
         if (state.blurStrength) blurStrengthInput.value = state.blurStrength;
         if (state.blurAngle) blurAngleInput.value = state.blurAngle;
         if (typeof state.blurTapered === 'boolean') blurTaperedCheckbox.checked = state.blurTapered;
+        if (state.grain) grainInput.value = state.grain;
 
         // Restore background image
         if (state.bgImageData) {
@@ -1689,6 +1761,7 @@
       noiseInput.dispatchEvent(new Event('input'));
       blurStrengthInput.dispatchEvent(new Event('input'));
       blurAngleInput.dispatchEvent(new Event('input'));
+      grainInput.dispatchEvent(new Event('input'));
     }
 
     // Initialize WebGL
