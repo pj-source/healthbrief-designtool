@@ -577,7 +577,7 @@
       bottom: 4px;
       background-color: #80796F;
       transition: transform 0.3s ease, background-color 0.3s ease;
-      border-radius: 4px;
+      border-radius: 1px;
     }
 
     .toggle-switch input:checked + .toggle-slider {
@@ -724,14 +724,6 @@
     <div id="graphicsTab" class="tab-content">
     <div class="panel-section-title">Shape &amp; Grid</div>
     <div class="field">
-      <label for="showGrid">Show Grid</label>
-      <label class="toggle-switch">
-        <input id="showGrid" type="checkbox" checked />
-        <span class="toggle-slider"></span>
-      </label>
-    </div>
-
-    <div class="field">
       <label for="seed">Shape Seed</label>
       <div class="field-inline">
         <button type="button" id="randomSeed" class="pill-button seed-button" title="Change seed">
@@ -761,6 +753,14 @@
         <input id="rows" type="number" min="3" max="12" value="8" class="pill-input stepper-input" />
         <button type="button" class="stepper-btn" data-dir="1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
       </div>
+    </div>
+
+    <div class="field">
+      <label for="showGrid">Show Grid</label>
+      <label class="toggle-switch">
+        <input id="showGrid" type="checkbox" checked />
+        <span class="toggle-slider"></span>
+      </label>
     </div>
 
     <div class="panel-section-title">Lines</div>
