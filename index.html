@@ -614,10 +614,11 @@
       display: block;
       border-radius: 0;
       background: transparent;
-      max-width: 100%;
-      max-height: 100vh;
-      width: auto;
+      width: calc(100vw - 424px);
       height: auto;
+      max-width: 1200px;
+      max-height: calc(100vh - 64px);
+      object-fit: contain;
     }
 
     @media (max-width: 768px) {
@@ -1045,29 +1046,12 @@
     }
 
     function updateCanvasSize(cols, rows) {
+      // Set internal canvas dimensions for high-quality rendering
       const baseW = BASE_WIDTH * SCALE_FACTOR;
       const baseH = Math.round(baseW * (rows / cols));
       canvas.width = baseW;
       canvas.height = baseH;
-
-      // Calculate available space accounting for panel
-      const isMobile = window.innerWidth <= 768;
-      const availableWidth = isMobile ? window.innerWidth - 80 : window.innerWidth - 424;
-      const availableHeight = window.innerHeight - 64;
-
-      // Calculate display size based on aspect ratio and available space
-      const aspectRatio = rows / cols;
-      let displayWidth = Math.min(BASE_WIDTH, availableWidth);
-      let displayHeight = displayWidth * aspectRatio;
-
-      // If height exceeds available space, constrain by height instead
-      if (displayHeight > availableHeight) {
-        displayHeight = availableHeight;
-        displayWidth = displayHeight / aspectRatio;
-      }
-
-      canvas.style.width = `${displayWidth}px`;
-      canvas.style.height = `${displayHeight}px`;
+      // CSS handles the display size based on viewport width
     }
 
     function drawPattern(seed, cols, rows, config) {
@@ -1808,14 +1792,13 @@
     // Load saved state on page load
     loadState();
 
-    // Handle window resize for responsive canvas
+    // Handle window resize to regenerate grain cache if needed
     let resizeTimeout;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
-        const cols = parseInt(colsInput.value || "11", 10);
-        const rows = parseInt(rowsInput.value || "8", 10);
-        updateCanvasSize(cols, rows);
+        // Canvas display size is handled by CSS
+        // Just regenerate to update grain cache if canvas dimensions changed
         regenerate();
       }, 150);
     });
