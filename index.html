@@ -64,7 +64,47 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 0px;
+      margin-bottom: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      background: #ebe3d8;
+      border-radius: 4px;
+      padding: 3px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 6px 12px;
+      border: none;
+      background: transparent;
+      color: #6b5b4b;
+      font-size: 0.78rem;
+      font-weight: 400;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: all 0.2s ease;
+    }
+
+    .tab:hover {
+      color: #3a2b1f;
+    }
+
+    .tab.active {
+      background: #F9F7F4;
+      color: #201711;
+      font-weight: 500;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
     }
 
     .panel-logo {
@@ -103,7 +143,7 @@
       font-size: 0.8rem;
       font-weight: 400;
       color: #22160f;
-      margin: 40px 0 20px;
+      margin: 40px 0 28px;
       position: relative;
     }
 
@@ -342,6 +382,36 @@
       );
     }
 
+    #blurStrength.pill-range {
+      background: linear-gradient(
+        to right,
+        #80796F 0%,
+        #80796F var(--blur-strength-fill, 0%),
+        #F2ECE3 var(--blur-strength-fill, 0%),
+        #F2ECE3 100%
+      );
+    }
+
+    #blurAngle.pill-range {
+      background: linear-gradient(
+        to right,
+        #80796F 0%,
+        #80796F var(--blur-angle-fill, 50%),
+        #F2ECE3 var(--blur-angle-fill, 50%),
+        #F2ECE3 100%
+      );
+    }
+
+    #grain.pill-range {
+      background: linear-gradient(
+        to right,
+        #80796F 0%,
+        #80796F var(--grain-fill, 0%),
+        #F2ECE3 var(--grain-fill, 0%),
+        #F2ECE3 100%
+      );
+    }
+
     input[type="range"].pill-range::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
@@ -473,6 +543,60 @@
       background: #140c08;
     }
 
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #f2ece3;
+      transition: background-color 0.3s ease;
+      border-radius: 4px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: #80796F;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+      border-radius: 1.5px;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: #80796F;
+    }
+
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+      background-color: #F9F7F4;
+    }
+
+    .toggle-slider:hover {
+      background-color: #ebe3d8;
+    }
+
+    .toggle-switch input:checked + .toggle-slider:hover {
+      background-color: #726b62;
+    }
+
     small.hint {
       position: fixed;
       bottom: 0.75rem;
@@ -489,7 +613,11 @@
     canvas {
       display: block;
       border-radius: 0;
-      background: #111;
+      background: transparent;
+      width: calc(100vw - 424px);
+      height: auto;
+      max-width: 1200px;
+      max-height: calc(100vh - 64px);
       object-fit: contain;
     }
 
@@ -537,6 +665,12 @@
       <button type="button" id="resetBtn" class="reset-btn">Reset</button>
     </div>
 
+    <div class="tabs">
+      <button class="tab active" data-tab="image">Image</button>
+      <button class="tab" data-tab="graphics">Graphics</button>
+    </div>
+
+    <div id="imageTab" class="tab-content active">
     <div class="panel-section-title">Background</div>
     <div class="field">
       <label>Image</label>
@@ -549,6 +683,45 @@
     </div>
     <input id="bgImage" type="file" accept="image/*" style="display:none" />
 
+    <div class="panel-section-title">Blur</div>
+    <div class="field slider-field">
+      <label>Blur Strength <span id="blurStrengthValue" class="slider-value">0.00</span></label>
+      <div class="slider-wrapper">
+        <div class="slider-shell">
+          <input id="blurStrength" type="range" step="0.001" min="0" max="0.2" value="0" class="pill-range" />
+        </div>
+      </div>
+    </div>
+
+    <div class="field slider-field">
+      <label>Blur Angle <span id="blurAngleValue" class="slider-value">0°</span></label>
+      <div class="slider-wrapper">
+        <div class="slider-shell">
+          <input id="blurAngle" type="range" step="1" min="-180" max="180" value="0" class="pill-range" />
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="blurTapered">Tapered Blur</label>
+      <label class="toggle-switch">
+        <input id="blurTapered" type="checkbox" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="panel-section-title">Adjustments</div>
+    <div class="field slider-field">
+      <label>Grain <span id="grainValue" class="slider-value">0.00</span></label>
+      <div class="slider-wrapper">
+        <div class="slider-shell">
+          <input id="grain" type="range" step="0.01" min="0" max="1.0" value="0" class="pill-range" />
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div id="graphicsTab" class="tab-content">
     <div class="panel-section-title">Shape &amp; Grid</div>
     <div class="field">
       <label for="seed">Shape Seed</label>
@@ -565,15 +738,10 @@
     <input id="seed" type="hidden" value="001" />
 
     <div class="field">
-      <label for="showGrid">Show Grid</label>
-      <input id="showGrid" type="checkbox" checked class="pill-input" style="width: 20px; height: 20px; cursor: pointer;" />
-    </div>
-
-    <div class="field">
       <label for="cols">Columns</label>
       <div class="stepper" data-target="cols">
         <button type="button" class="stepper-btn" data-dir="-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
-        <input id="cols" type="number" min="3" max="16" value="10" class="pill-input stepper-input" />
+        <input id="cols" type="number" min="3" max="16" value="11" class="pill-input stepper-input" />
         <button type="button" class="stepper-btn" data-dir="1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
       </div>
     </div>
@@ -582,9 +750,17 @@
       <label for="rows">Rows</label>
       <div class="stepper" data-target="rows">
         <button type="button" class="stepper-btn" data-dir="-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
-        <input id="rows" type="number" min="3" max="12" value="7" class="pill-input stepper-input" />
+        <input id="rows" type="number" min="3" max="12" value="8" class="pill-input stepper-input" />
         <button type="button" class="stepper-btn" data-dir="1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
       </div>
+    </div>
+
+    <div class="field">
+      <label for="showGrid">Show Grid</label>
+      <label class="toggle-switch">
+        <input id="showGrid" type="checkbox" checked />
+        <span class="toggle-slider"></span>
+      </label>
     </div>
 
     <div class="panel-section-title">Lines</div>
@@ -592,7 +768,7 @@
       <label for="strokeMin">Min Width</label>
       <div class="stepper" data-target="strokeMin">
         <button type="button" class="stepper-btn" data-dir="-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
-        <input id="strokeMin" type="number" step="0.1" value="0.5" class="pill-input stepper-input" />
+        <input id="strokeMin" type="number" step="0.1" value="1" class="pill-input stepper-input" />
         <button type="button" class="stepper-btn" data-dir="1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
       </div>
     </div>
@@ -601,13 +777,13 @@
       <label for="strokeMax">Max Width</label>
       <div class="stepper" data-target="strokeMax">
         <button type="button" class="stepper-btn" data-dir="-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
-        <input id="strokeMax" type="number" step="0.1" value="3.5" class="pill-input stepper-input" />
+        <input id="strokeMax" type="number" step="0.1" value="5" class="pill-input stepper-input" />
         <button type="button" class="stepper-btn" data-dir="1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
       </div>
     </div>
 
+    <div class="panel-section-title">Color</div>
     <div class="field color-field">
-      <label>Color</label>
       <div class="color-chips" id="colorChips">
         <button type="button" class="color-chip selected" data-color="clay">
           <span class="color-dot" style="background:#BA4E2F;"></span>
@@ -663,6 +839,7 @@
         </div>
       </div>
     </div>
+    </div>
 
     <button id="render" class="primary-block">Export</button>
   </div>
@@ -712,20 +889,169 @@
     const ctx = canvas.getContext("2d");
 
     let bgImage = null;
+    let blurCanvas = null;
+    let gl = null;
+    let blurProgram = null;
+
+    // Initialize WebGL for motion blur
+    function initWebGL() {
+      blurCanvas = document.createElement('canvas');
+      gl = blurCanvas.getContext('webgl') || blurCanvas.getContext('experimental-webgl');
+
+      if (!gl) {
+        console.warn('WebGL not supported, motion blur disabled');
+        return false;
+      }
+
+      // Vertex shader
+      const vertexShaderSource = `
+        attribute vec2 a_position;
+        attribute vec2 a_texCoord;
+        varying vec2 v_texCoord;
+        void main() {
+          gl_Position = vec4(a_position, 0.0, 1.0);
+          v_texCoord = a_texCoord;
+        }
+      `;
+
+      // Fragment shader with directional motion blur
+      const fragmentShaderSource = `
+        precision mediump float;
+        uniform sampler2D u_image;
+        uniform vec2 u_blurDirection;
+        uniform float u_blurStrength;
+        uniform bool u_tapered;
+        varying vec2 v_texCoord;
+
+        void main() {
+          vec4 color = vec4(0.0);
+          float total = 0.0;
+
+          const int samples = 16;
+
+          for (int i = 0; i < samples; i++) {
+            float offset = (float(i) - float(samples) / 2.0) / float(samples);
+            vec2 sampleCoord = v_texCoord + u_blurDirection * offset * u_blurStrength;
+
+            float weight = 1.0;
+            if (u_tapered) {
+              // Gaussian-like taper for smoother blur
+              float sigma = 0.5;
+              weight = exp(-(offset * offset) / (2.0 * sigma * sigma));
+            }
+
+            color += texture2D(u_image, sampleCoord) * weight;
+            total += weight;
+          }
+
+          gl_FragColor = color / total;
+        }
+      `;
+
+      // Compile shaders
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+      gl.shaderSource(vertexShader, vertexShaderSource);
+      gl.compileShader(vertexShader);
+
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(fragmentShader, fragmentShaderSource);
+      gl.compileShader(fragmentShader);
+
+      // Create program
+      blurProgram = gl.createProgram();
+      gl.attachShader(blurProgram, vertexShader);
+      gl.attachShader(blurProgram, fragmentShader);
+      gl.linkProgram(blurProgram);
+
+      if (!gl.getProgramParameter(blurProgram, gl.LINK_STATUS)) {
+        console.error('Unable to initialize shader program');
+        return false;
+      }
+
+      return true;
+    }
+
+    // Apply motion blur using WebGL
+    function applyMotionBlur(image, width, height, blurStrength, blurAngle, tapered) {
+      if (!gl || !blurProgram || blurStrength === 0) {
+        return image;
+      }
+
+      // Set canvas size
+      blurCanvas.width = width;
+      blurCanvas.height = height;
+      gl.viewport(0, 0, width, height);
+
+      // Use program
+      gl.useProgram(blurProgram);
+
+      // Create texture from image
+      const texture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+
+      // Set up geometry (full screen quad)
+      const positionBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        -1, -1,  1, -1,  -1, 1,
+        -1, 1,   1, -1,   1, 1
+      ]), gl.STATIC_DRAW);
+
+      const texCoordBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        0, 1,  1, 1,  0, 0,
+        0, 0,  1, 1,  1, 0
+      ]), gl.STATIC_DRAW);
+
+      // Set attributes
+      const positionLocation = gl.getAttribLocation(blurProgram, 'a_position');
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.enableVertexAttribArray(positionLocation);
+      gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+      const texCoordLocation = gl.getAttribLocation(blurProgram, 'a_texCoord');
+      gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+      gl.enableVertexAttribArray(texCoordLocation);
+      gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
+
+      // Set uniforms
+      const angleRad = blurAngle * Math.PI / 180;
+      const blurDirectionX = Math.cos(angleRad);
+      const blurDirectionY = Math.sin(angleRad);
+
+      const blurDirectionLocation = gl.getUniformLocation(blurProgram, 'u_blurDirection');
+      gl.uniform2f(blurDirectionLocation, blurDirectionX, blurDirectionY);
+
+      const blurStrengthLocation = gl.getUniformLocation(blurProgram, 'u_blurStrength');
+      gl.uniform1f(blurStrengthLocation, blurStrength);
+
+      const taperedLocation = gl.getUniformLocation(blurProgram, 'u_tapered');
+      gl.uniform1i(taperedLocation, tapered ? 1 : 0);
+
+      // Draw
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+      // Clean up
+      gl.deleteTexture(texture);
+      gl.deleteBuffer(positionBuffer);
+      gl.deleteBuffer(texCoordBuffer);
+
+      return blurCanvas;
+    }
 
     function updateCanvasSize(cols, rows) {
+      // Set internal canvas dimensions for high-quality rendering
       const baseW = BASE_WIDTH * SCALE_FACTOR;
       const baseH = Math.round(baseW * (rows / cols));
       canvas.width = baseW;
       canvas.height = baseH;
-      // Scale CSS display size to keep UI manageable and maintain aspect ratio
-      const displayWidth = Math.min(BASE_WIDTH, window.innerWidth - 400);
-      const displayHeight = Math.round(displayWidth * (rows / cols));
-      canvas.style.width = `${displayWidth}px`;
-      canvas.style.height = `${displayHeight}px`;
-      canvas.style.maxWidth = 'calc(100vw - 380px)';
-      canvas.style.maxHeight = '90vh';
-      canvas.style.objectFit = 'contain';
+      // CSS handles the display size based on viewport width
     }
 
     function drawPattern(seed, cols, rows, config) {
@@ -742,7 +1068,51 @@
         const dh = bgImage.height * scale;
         const dx = (w - dw) / 2;
         const dy = (h - dh) / 2;
-        ctx.drawImage(bgImage, dx, dy, dw, dh);
+
+        const blurStrength = parseFloat(document.getElementById('blurStrength').value) || 0;
+        const blurAngle = parseFloat(document.getElementById('blurAngle').value) || -127;
+        const blurTapered = document.getElementById('blurTapered').checked;
+
+        let processedImage = bgImage;
+
+        if (blurStrength > 0 && gl) {
+          // Apply WebGL motion blur
+          const blurredImage = applyMotionBlur(bgImage, Math.floor(dw), Math.floor(dh), blurStrength, blurAngle, blurTapered);
+
+          // Apply additional Gaussian blur to smooth out stepping artifacts
+          // Use a temporary canvas with padding to avoid edge darkening
+          const padding = 50; // Extra space around edges
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = Math.floor(dw) + padding * 2;
+          tempCanvas.height = Math.floor(dh) + padding * 2;
+          const tempCtx = tempCanvas.getContext('2d');
+
+          // Draw blurred image in center with padding
+          tempCtx.drawImage(blurredImage, padding, padding, Math.floor(dw), Math.floor(dh));
+
+          // Apply Gaussian blur on temp canvas
+          tempCtx.filter = 'blur(12px)';
+          tempCtx.drawImage(tempCanvas, 0, 0);
+          tempCtx.filter = 'none';
+
+          // Create a new canvas for the processed image
+          const processedCanvas = document.createElement('canvas');
+          processedCanvas.width = Math.floor(dw);
+          processedCanvas.height = Math.floor(dh);
+          const processedCtx = processedCanvas.getContext('2d');
+
+          // Draw only the center portion (without padding)
+          processedCtx.drawImage(tempCanvas, padding, padding, Math.floor(dw), Math.floor(dh), 0, 0, Math.floor(dw), Math.floor(dh));
+
+          processedImage = processedCanvas;
+        }
+
+        // Draw the final processed image
+        if (processedImage === bgImage) {
+          ctx.drawImage(bgImage, dx, dy, dw, dh);
+        } else {
+          ctx.drawImage(processedImage, 0, 0, Math.floor(dw), Math.floor(dh), dx, dy, dw, dh);
+        }
       } else {
         ctx.fillStyle = "#020304";
         ctx.fillRect(0, 0, w, h);
@@ -760,83 +1130,105 @@
       const noise = Math.min(1, Math.max(0, config.noise || 0));
       const strokeColor = config.strokeColor;
 
-      const weights = [];
-      const blobCount = 3 + Math.floor(rand() * 3);
-      const blobs = [];
-      const scale = Math.max(cols, rows);
+      // Check if we can reuse cached pattern data
+      const cacheKey = `${seed}-${cols}-${rows}-${coverage}-${noise}`;
+      const needsNewPattern = patternCache.seed !== cacheKey;
 
-      for (let i = 0; i < blobCount; i++) {
-        const edgeBias = 0.8;
-        let cx, cy;
+      let activeCells, minV, maxV;
 
-        if (rand() < edgeBias) {
-          const side = Math.floor(rand() * 4);
-          if (side === 0) {
-            cx = rand() * cols;
-            cy = rand() * (rows * 0.25);
-          } else if (side === 1) {
-            cx = rand() * cols;
-            cy = rows * (0.75 + rand() * 0.25);
-          } else if (side === 2) {
-            cx = rand() * (cols * 0.25);
-            cy = rand() * rows;
+      if (needsNewPattern) {
+        // Generate new pattern
+        const weights = [];
+        const blobCount = 3 + Math.floor(rand() * 3);
+        const blobs = [];
+        const scale = Math.max(cols, rows);
+
+        for (let i = 0; i < blobCount; i++) {
+          const edgeBias = 0.8;
+          let cx, cy;
+
+          if (rand() < edgeBias) {
+            const side = Math.floor(rand() * 4);
+            if (side === 0) {
+              cx = rand() * cols;
+              cy = rand() * (rows * 0.25);
+            } else if (side === 1) {
+              cx = rand() * cols;
+              cy = rows * (0.75 + rand() * 0.25);
+            } else if (side === 2) {
+              cx = rand() * (cols * 0.25);
+              cy = rand() * rows;
+            } else {
+              cx = cols * (0.75 + rand() * 0.25);
+              cy = rand() * rows;
+            }
           } else {
-            cx = cols * (0.75 + rand() * 0.25);
+            cx = rand() * cols;
             cy = rand() * rows;
+
+            const centerX = cols / 2;
+            const centerY = rows / 2;
+            const centerMarginX = cols * 0.2;
+            const centerMarginY = rows * 0.2;
+
+            if (Math.abs(cx - centerX) < centerMarginX && Math.abs(cy - centerY) < centerMarginY) {
+              if (cx < centerX) cx -= centerMarginX * 0.5;
+              else cx += centerMarginX * 0.5;
+              if (cy < centerY) cy -= centerMarginY * 0.5;
+              else cy += centerMarginY * 0.5;
+            }
           }
-        } else {
-          cx = rand() * cols;
-          cy = rand() * rows;
 
-          const centerX = cols / 2;
-          const centerY = rows / 2;
-          const centerMarginX = cols * 0.2;
-          const centerMarginY = rows * 0.2;
+          const radius = scale * (0.6 + rand() * 0.9);
+          blobs.push({ cx, cy, radius });
+        }
 
-          if (Math.abs(cx - centerX) < centerMarginX && Math.abs(cy - centerY) < centerMarginY) {
-            if (cx < centerX) cx -= centerMarginX * 0.5;
-            else cx += centerMarginX * 0.5;
-            if (cy < centerY) cy -= centerMarginY * 0.5;
-            else cy += centerMarginY * 0.5;
+        for (let yy = 0; yy < rows; yy++) {
+          for (let xx = 0; xx < cols; xx++) {
+            let v = 0;
+            for (const b of blobs) {
+              const dx = xx - b.cx;
+              const dy = yy - b.cy;
+              const d2 = dx * dx + dy * dy;
+              const r2 = b.radius * b.radius;
+              v += Math.exp(-d2 / (2 * r2));
+            }
+            if (noise > 0) {
+              v += (rand() - 0.5) * 2 * noise;
+            }
+            weights.push({ x: xx, y: yy, v });
           }
         }
 
-        const radius = scale * (0.6 + rand() * 0.9);
-        blobs.push({ cx, cy, radius });
-      }
+        weights.sort((a, b) => b.v - a.v);
+        const cutoffIndex = Math.floor(coverage * weights.length);
+        activeCells = weights.slice(0, cutoffIndex);
 
-      for (let yy = 0; yy < rows; yy++) {
-        for (let xx = 0; xx < cols; xx++) {
-          let v = 0;
-          for (const b of blobs) {
-            const dx = xx - b.cx;
-            const dy = yy - b.cy;
-            const d2 = dx * dx + dy * dy;
-            const r2 = b.radius * b.radius;
-            v += Math.exp(-d2 / (2 * r2));
-          }
-          if (noise > 0) {
-            v += (rand() - 0.5) * 2 * noise;
-          }
-          weights.push({ x: xx, y: yy, v });
+        minV = Infinity;
+        maxV = -Infinity;
+        for (const cell of activeCells) {
+          if (cell.v < minV) minV = cell.v;
+          if (cell.v > maxV) maxV = cell.v;
         }
-      }
+        if (!isFinite(minV)) {
+          minV = 0;
+          maxV = 1;
+        } else if (maxV === minV) {
+          maxV = minV + 1;
+        }
 
-      weights.sort((a, b) => b.v - a.v);
-      const cutoffIndex = Math.floor(coverage * weights.length);
-      const activeCells = weights.slice(0, cutoffIndex);
-
-      let minV = Infinity;
-      let maxV = -Infinity;
-      for (const cell of activeCells) {
-        if (cell.v < minV) minV = cell.v;
-        if (cell.v > maxV) maxV = cell.v;
-      }
-      if (!isFinite(minV)) {
-        minV = 0;
-        maxV = 1;
-      } else if (maxV === minV) {
-        maxV = minV + 1;
+        // Cache the pattern data
+        patternCache = {
+          seed: cacheKey,
+          activeCells: activeCells,
+          minV: minV,
+          maxV: maxV
+        };
+      } else {
+        // Reuse cached pattern
+        activeCells = patternCache.activeCells;
+        minV = patternCache.minV;
+        maxV = patternCache.maxV;
       }
 
       function drawStripedCell(cell) {
@@ -898,6 +1290,38 @@
         }
         ctx.globalCompositeOperation = 'source-over';
       }
+
+      // Apply grain over everything as final layer
+      const grainAmount = parseFloat(document.getElementById('grain').value) || 0;
+      if (grainAmount > 0) {
+        const imageData = ctx.getImageData(0, 0, w, h);
+        const data = imageData.data;
+
+        // Check if we can reuse cached grain noise
+        const needsNewGrain = grainCache.width !== w || grainCache.height !== h || grainCache.noiseData === null;
+
+        if (needsNewGrain) {
+          // Generate new grain noise pattern
+          const pixelCount = w * h;
+          grainCache.noiseData = new Float32Array(pixelCount);
+          for (let i = 0; i < pixelCount; i++) {
+            grainCache.noiseData[i] = (Math.random() - 0.5) * 255;
+          }
+          grainCache.width = w;
+          grainCache.height = h;
+        }
+
+        // Apply cached grain with current amount
+        for (let i = 0; i < data.length; i += 4) {
+          const pixelIndex = Math.floor(i / 4);
+          const grainValue = grainCache.noiseData[pixelIndex] * grainAmount;
+          data[i] += grainValue;     // R
+          data[i + 1] += grainValue; // G
+          data[i + 2] += grainValue; // B
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+      }
     }
 
     const seedInput = document.getElementById("seed");
@@ -907,8 +1331,15 @@
     const strokeMaxInput = document.getElementById("strokeMax");
     const coverageInput = document.getElementById("coverage");
     const noiseInput = document.getElementById("noise");
+    const blurStrengthInput = document.getElementById("blurStrength");
+    const blurAngleInput = document.getElementById("blurAngle");
+    const blurTaperedCheckbox = document.getElementById("blurTapered");
+    const grainInput = document.getElementById("grain");
     const coverageValueLabel = document.getElementById("coverageValue");
     const noiseValueLabel = document.getElementById("noiseValue");
+    const blurStrengthValueLabel = document.getElementById("blurStrengthValue");
+    const grainValueLabel = document.getElementById("grainValue");
+    const blurAngleValueLabel = document.getElementById("blurAngleValue");
     const lineColorPresetInput = document.getElementById("lineColorPreset");
     const colorChips = document.getElementById("colorChips");
     const bgInput = document.getElementById("bgImage");
@@ -924,18 +1355,38 @@
     let seedHistory = ['001'];
     let seedHistoryIndex = 0;
 
+    // Cache for grain pattern to avoid regenerating on every render
+    let grainCache = {
+      width: 0,
+      height: 0,
+      amount: 0,
+      noiseData: null
+    };
+
+    // Cache for pattern data to avoid recalculating blobs/weights
+    let patternCache = {
+      seed: null,
+      cols: 0,
+      rows: 0,
+      activeCells: null
+    };
+
     // Default values for reset
     const defaults = {
       seed: '001',
-      cols: 10,
-      rows: 7,
-      strokeMin: 0.5,
-      strokeMax: 3.5,
+      cols: 11,
+      rows: 8,
+      strokeMin: 1,
+      strokeMax: 5,
       coverage: 0.30,
       noise: 0.20,
       color: 'clay',
       bgImage: null,
-      showGrid: true
+      showGrid: true,
+      blurStrength: 0,
+      blurAngle: 0,
+      blurTapered: false,
+      grain: 0
     };
 
     function getStrokeColor() {
@@ -982,6 +1433,23 @@
 
       updateCanvasSize(cols, rows);
       drawPattern(seed, cols, rows, config);
+
+      // Save state to localStorage (debounced to reduce writes)
+      if (typeof debouncedSaveState === 'function') {
+        debouncedSaveState();
+      }
+    }
+
+    // requestAnimationFrame batching for slider updates
+    let rafPending = false;
+    function scheduleRegenerate() {
+      if (!rafPending) {
+        rafPending = true;
+        requestAnimationFrame(() => {
+          rafPending = false;
+          regenerate();
+        });
+      }
     }
 
     renderBtn.addEventListener("click", regenerate);
@@ -1001,6 +1469,7 @@
     strokeMinInput.addEventListener("change", regenerate);
     strokeMaxInput.addEventListener("change", regenerate);
     showGridCheckbox.addEventListener("change", regenerate);
+    blurTaperedCheckbox.addEventListener("change", regenerate);
 
     coverageInput.addEventListener("input", () => {
       const min = parseFloat(coverageInput.min) || 0;
@@ -1010,7 +1479,7 @@
       const pct = ((v - min) / (max - min)) * 100;
       document.documentElement.style.setProperty('--coverage-fill', pct + '%');
       if (coverageValueLabel) coverageValueLabel.textContent = v.toFixed(2);
-      regenerate();
+      scheduleRegenerate();
     });
 
     noiseInput.addEventListener("input", () => {
@@ -1021,7 +1490,40 @@
       const pct = ((v - min) / (max - min)) * 100;
       document.documentElement.style.setProperty('--noise-fill', pct + '%');
       if (noiseValueLabel) noiseValueLabel.textContent = v.toFixed(2);
-      regenerate();
+      scheduleRegenerate();
+    });
+
+    blurStrengthInput.addEventListener("input", () => {
+      const min = parseFloat(blurStrengthInput.min) || 0;
+      const max = parseFloat(blurStrengthInput.max) || 0.2;
+      let v = parseFloat(blurStrengthInput.value);
+      if (isNaN(v)) v = min;
+      const pct = ((v - min) / (max - min)) * 100;
+      document.documentElement.style.setProperty('--blur-strength-fill', pct + '%');
+      if (blurStrengthValueLabel) blurStrengthValueLabel.textContent = v.toFixed(2);
+      scheduleRegenerate();
+    });
+
+    blurAngleInput.addEventListener("input", () => {
+      const min = parseFloat(blurAngleInput.min) || -180;
+      const max = parseFloat(blurAngleInput.max) || 180;
+      let v = parseFloat(blurAngleInput.value);
+      if (isNaN(v)) v = min;
+      const pct = ((v - min) / (max - min)) * 100;
+      document.documentElement.style.setProperty('--blur-angle-fill', pct + '%');
+      if (blurAngleValueLabel) blurAngleValueLabel.textContent = Math.round(v) + '°';
+      scheduleRegenerate();
+    });
+
+    grainInput.addEventListener("input", () => {
+      const min = parseFloat(grainInput.min) || 0;
+      const max = parseFloat(grainInput.max) || 1.0;
+      let v = parseFloat(grainInput.value);
+      if (isNaN(v)) v = min;
+      const pct = ((v - min) / (max - min)) * 100;
+      document.documentElement.style.setProperty('--grain-fill', pct + '%');
+      if (grainValueLabel) grainValueLabel.textContent = v.toFixed(2);
+      scheduleRegenerate();
     });
 
     colorChips.addEventListener("click", (event) => {
@@ -1048,6 +1550,7 @@
       if (!file) {
         bgImage = null;
         bgFileLabel.textContent = "No file chosen";
+        saveState();
         regenerate();
         return;
       }
@@ -1057,6 +1560,7 @@
         const img = new Image();
         img.onload = () => {
           bgImage = img;
+          saveState();
           regenerate();
         };
         img.src = reader.result;
@@ -1094,6 +1598,13 @@
     });
 
     resetBtn.addEventListener("click", () => {
+      // Clear localStorage
+      try {
+        localStorage.removeItem('healthbrief-designtool-state');
+      } catch (e) {
+        console.warn('Could not clear localStorage:', e);
+      }
+
       // Reset all values to defaults
       seedInput.value = defaults.seed;
       colsInput.value = defaults.cols;
@@ -1102,6 +1613,10 @@
       strokeMaxInput.value = defaults.strokeMax;
       coverageInput.value = defaults.coverage;
       noiseInput.value = defaults.noise;
+      blurStrengthInput.value = defaults.blurStrength;
+      blurAngleInput.value = defaults.blurAngle;
+      blurTaperedCheckbox.checked = defaults.blurTapered;
+      grainInput.value = defaults.grain;
       lineColorPresetInput.value = defaults.color;
       showGridCheckbox.checked = defaults.showGrid;
 
@@ -1128,6 +1643,18 @@
       const noisePct = ((defaults.noise - 0) / (1.0 - 0)) * 100;
       document.documentElement.style.setProperty('--noise-fill', noisePct + '%');
       noiseValueLabel.textContent = defaults.noise.toFixed(2);
+
+      const blurStrengthPct = ((defaults.blurStrength - 0) / (0.2 - 0)) * 100;
+      document.documentElement.style.setProperty('--blur-strength-fill', blurStrengthPct + '%');
+      blurStrengthValueLabel.textContent = defaults.blurStrength.toFixed(2);
+
+      const blurAnglePct = ((defaults.blurAngle - (-180)) / (180 - (-180))) * 100;
+      document.documentElement.style.setProperty('--blur-angle-fill', blurAnglePct + '%');
+      blurAngleValueLabel.textContent = defaults.blurAngle + '°';
+
+      const grainPct = ((defaults.grain - 0) / (1.0 - 0)) * 100;
+      document.documentElement.style.setProperty('--grain-fill', grainPct + '%');
+      grainValueLabel.textContent = defaults.grain.toFixed(2);
 
       regenerate();
     });
@@ -1177,7 +1704,153 @@
         document.documentElement.style.setProperty('--noise-fill', pct + '%');
         if (noiseValueLabel) noiseValueLabel.textContent = nv.toFixed(2);
       }
+      if (blurStrengthInput) {
+        const min = parseFloat(blurStrengthInput.min) || 0;
+        const max = parseFloat(blurStrengthInput.max) || 0.2;
+        let bsv = parseFloat(blurStrengthInput.value);
+        if (isNaN(bsv)) bsv = min;
+        const pct = ((bsv - min) / (max - min)) * 100;
+        document.documentElement.style.setProperty('--blur-strength-fill', pct + '%');
+        if (blurStrengthValueLabel) blurStrengthValueLabel.textContent = bsv.toFixed(2);
+      }
+      if (blurAngleInput) {
+        const min = parseFloat(blurAngleInput.min) || -180;
+        const max = parseFloat(blurAngleInput.max) || 180;
+        let bav = parseFloat(blurAngleInput.value);
+        if (isNaN(bav)) bav = min;
+        const pct = ((bav - min) / (max - min)) * 100;
+        document.documentElement.style.setProperty('--blur-angle-fill', pct + '%');
+        if (blurAngleValueLabel) blurAngleValueLabel.textContent = Math.round(bav) + '°';
+      }
     })();
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const targetTab = tab.getAttribute('data-tab');
+
+        // Remove active class from all tabs and content
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+        // Add active class to clicked tab and corresponding content
+        tab.classList.add('active');
+        if (targetTab === 'image') {
+          document.getElementById('imageTab').classList.add('active');
+        } else if (targetTab === 'graphics') {
+          document.getElementById('graphicsTab').classList.add('active');
+        }
+      });
+    });
+
+    // Save state to localStorage
+    let saveStateTimeout;
+    function saveState() {
+      const state = {
+        seed: seedInput.value,
+        cols: colsInput.value,
+        rows: rowsInput.value,
+        strokeMin: strokeMinInput.value,
+        strokeMax: strokeMaxInput.value,
+        coverage: coverageInput.value,
+        noise: noiseInput.value,
+        color: lineColorPresetInput.value,
+        showGrid: showGridCheckbox.checked,
+        blurStrength: blurStrengthInput.value,
+        blurAngle: blurAngleInput.value,
+        blurTapered: blurTaperedCheckbox.checked,
+        grain: grainInput.value,
+        bgImageData: bgImage ? bgImage.src : null,
+        bgFileName: bgFileLabel.textContent !== "No file chosen" ? bgFileLabel.textContent : null
+      };
+      try {
+        localStorage.setItem('healthbrief-designtool-state', JSON.stringify(state));
+      } catch (e) {
+        console.warn('Could not save to localStorage:', e);
+      }
+    }
+
+    // Debounced version of saveState to avoid excessive writes
+    function debouncedSaveState() {
+      clearTimeout(saveStateTimeout);
+      saveStateTimeout = setTimeout(saveState, 500);
+    }
+
+    // Load state from localStorage
+    function loadState() {
+      try {
+        const saved = localStorage.getItem('healthbrief-designtool-state');
+        if (!saved) return;
+
+        const state = JSON.parse(saved);
+
+        // Restore control values
+        if (state.seed) seedInput.value = state.seed;
+        if (state.cols) colsInput.value = state.cols;
+        if (state.rows) rowsInput.value = state.rows;
+        if (state.strokeMin) strokeMinInput.value = state.strokeMin;
+        if (state.strokeMax) strokeMaxInput.value = state.strokeMax;
+        if (state.coverage) coverageInput.value = state.coverage;
+        if (state.noise) noiseInput.value = state.noise;
+        if (state.color) {
+          lineColorPresetInput.value = state.color;
+          document.querySelectorAll(".color-chip").forEach((chip) => {
+            chip.classList.toggle("selected", chip.getAttribute("data-color") === state.color);
+          });
+        }
+        if (typeof state.showGrid === 'boolean') showGridCheckbox.checked = state.showGrid;
+        if (state.blurStrength) blurStrengthInput.value = state.blurStrength;
+        if (state.blurAngle) blurAngleInput.value = state.blurAngle;
+        if (typeof state.blurTapered === 'boolean') blurTaperedCheckbox.checked = state.blurTapered;
+        if (state.grain) grainInput.value = state.grain;
+
+        // Restore background image
+        if (state.bgImageData) {
+          const img = new Image();
+          img.onload = () => {
+            bgImage = img;
+            if (state.bgFileName) {
+              bgFileLabel.textContent = state.bgFileName;
+            }
+            // Update slider fills after loading
+            updateAllSliderFills();
+            regenerate();
+          };
+          img.src = state.bgImageData;
+        } else {
+          updateAllSliderFills();
+        }
+      } catch (e) {
+        console.warn('Could not load from localStorage:', e);
+      }
+    }
+
+    // Helper to update all slider fills
+    function updateAllSliderFills() {
+      // Trigger input events to update slider fills
+      coverageInput.dispatchEvent(new Event('input'));
+      noiseInput.dispatchEvent(new Event('input'));
+      blurStrengthInput.dispatchEvent(new Event('input'));
+      blurAngleInput.dispatchEvent(new Event('input'));
+      grainInput.dispatchEvent(new Event('input'));
+    }
+
+    // Initialize WebGL
+    initWebGL();
+
+    // Load saved state on page load
+    loadState();
+
+    // Handle window resize to regenerate grain cache if needed
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        // Canvas display size is handled by CSS
+        // Just regenerate to update grain cache if canvas dimensions changed
+        regenerate();
+      }, 150);
+    });
 
     regenerate();
   </script>
