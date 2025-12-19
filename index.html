@@ -1277,8 +1277,24 @@
         const imageData = ctx.getImageData(0, 0, w, h);
         const data = imageData.data;
 
+        // Check if we can reuse cached grain noise
+        const needsNewGrain = grainCache.width !== w || grainCache.height !== h || grainCache.noiseData === null;
+
+        if (needsNewGrain) {
+          // Generate new grain noise pattern
+          const pixelCount = w * h;
+          grainCache.noiseData = new Float32Array(pixelCount);
+          for (let i = 0; i < pixelCount; i++) {
+            grainCache.noiseData[i] = (Math.random() - 0.5) * 255;
+          }
+          grainCache.width = w;
+          grainCache.height = h;
+        }
+
+        // Apply cached grain with current amount
         for (let i = 0; i < data.length; i += 4) {
-          const grainValue = (Math.random() - 0.5) * grainAmount * 255;
+          const pixelIndex = Math.floor(i / 4);
+          const grainValue = grainCache.noiseData[pixelIndex] * grainAmount;
           data[i] += grainValue;     // R
           data[i + 1] += grainValue; // G
           data[i + 2] += grainValue; // B
@@ -1318,6 +1334,14 @@
     // Seed history for undo functionality
     let seedHistory = ['001'];
     let seedHistoryIndex = 0;
+
+    // Cache for grain pattern to avoid regenerating on every render
+    let grainCache = {
+      width: 0,
+      height: 0,
+      amount: 0,
+      noiseData: null
+    };
 
     // Default values for reset
     const defaults = {
