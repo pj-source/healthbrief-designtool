@@ -402,6 +402,16 @@
       );
     }
 
+    #grain.pill-range {
+      background: linear-gradient(
+        to right,
+        #80796F 0%,
+        #80796F var(--grain-fill, 0%),
+        #F2ECE3 var(--grain-fill, 0%),
+        #F2ECE3 100%
+      );
+    }
+
     input[type="range"].pill-range::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
@@ -1064,7 +1074,6 @@
         const blurStrength = parseFloat(document.getElementById('blurStrength').value) || 0;
         const blurAngle = parseFloat(document.getElementById('blurAngle').value) || -127;
         const blurTapered = document.getElementById('blurTapered').checked;
-        const grainAmount = parseFloat(document.getElementById('grain').value) || 0;
 
         let processedImage = bgImage;
 
@@ -1098,35 +1107,6 @@
           processedCtx.drawImage(tempCanvas, padding, padding, Math.floor(dw), Math.floor(dh), 0, 0, Math.floor(dw), Math.floor(dh));
 
           processedImage = processedCanvas;
-        }
-
-        // Apply grain if needed
-        if (grainAmount > 0) {
-          const grainCanvas = document.createElement('canvas');
-          grainCanvas.width = Math.floor(dw);
-          grainCanvas.height = Math.floor(dh);
-          const grainCtx = grainCanvas.getContext('2d');
-
-          // Draw the current image (either original or blurred)
-          if (processedImage === bgImage) {
-            grainCtx.drawImage(bgImage, 0, 0, Math.floor(dw), Math.floor(dh));
-          } else {
-            grainCtx.drawImage(processedImage, 0, 0);
-          }
-
-          // Apply grain
-          const imageData = grainCtx.getImageData(0, 0, Math.floor(dw), Math.floor(dh));
-          const data = imageData.data;
-
-          for (let i = 0; i < data.length; i += 4) {
-            const grainValue = (Math.random() - 0.5) * grainAmount * 255;
-            data[i] += grainValue;     // R
-            data[i + 1] += grainValue; // G
-            data[i + 2] += grainValue; // B
-          }
-
-          grainCtx.putImageData(imageData, 0, 0);
-          processedImage = grainCanvas;
         }
 
         // Draw the final processed image
@@ -1289,6 +1269,22 @@
           ctx.stroke();
         }
         ctx.globalCompositeOperation = 'source-over';
+      }
+
+      // Apply grain over everything as final layer
+      const grainAmount = parseFloat(document.getElementById('grain').value) || 0;
+      if (grainAmount > 0) {
+        const imageData = ctx.getImageData(0, 0, w, h);
+        const data = imageData.data;
+
+        for (let i = 0; i < data.length; i += 4) {
+          const grainValue = (Math.random() - 0.5) * grainAmount * 255;
+          data[i] += grainValue;     // R
+          data[i + 1] += grainValue; // G
+          data[i + 2] += grainValue; // B
+        }
+
+        ctx.putImageData(imageData, 0, 0);
       }
     }
 
@@ -1591,6 +1587,10 @@
       const blurAnglePct = ((defaults.blurAngle - (-180)) / (180 - (-180))) * 100;
       document.documentElement.style.setProperty('--blur-angle-fill', blurAnglePct + '%');
       blurAngleValueLabel.textContent = defaults.blurAngle + '°';
+
+      const grainPct = ((defaults.grain - 0) / (1.0 - 0)) * 100;
+      document.documentElement.style.setProperty('--grain-fill', grainPct + '%');
+      grainValueLabel.textContent = defaults.grain.toFixed(2);
 
       regenerate();
     });
